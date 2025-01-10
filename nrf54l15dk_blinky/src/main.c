@@ -6,14 +6,14 @@
 
 #include <zephyr/drivers/gpio.h>
 #include <zephyr/kernel.h>
-#include "zephyr/sys/util_macro.h"
 #include <zephyr/logging/log.h>
+#include "button.h"
 #ifdef CONFIG_MYFUNCTION
 #include "myFunc.h"
 #endif
 
 /* 1000 msec = 1 sec */
-#define SLEEP_TIME_MS 500
+#define SLEEP_TIME_MS 5000
 
 /* The devicetree node identifier for the "led0" alias. */
 #define LED0_NODE    DT_ALIAS(led0)
@@ -29,25 +29,19 @@ LOG_MODULE_REGISTER(blinking, LOG_LEVEL_INF);
  */
 static const struct gpio_dt_spec led0    = GPIO_DT_SPEC_GET(LED0_NODE, gpios);
 static const struct gpio_dt_spec led1    = GPIO_DT_SPEC_GET(LED1_NODE, gpios);
-static const struct gpio_dt_spec button0 = GPIO_DT_SPEC_GET(BUTTON0_NODE, gpios);
-
-static struct gpio_callback button0_cb_data;
-
-void button0_isr(const struct device* port, struct gpio_callback* cb, gpio_port_pins_t pins);
+const struct gpio_dt_spec button0        = GPIO_DT_SPEC_GET(BUTTON0_NODE, gpios);
 
 int main(void) {
     int ret;
     bool led_state = true;
-
+    button_init_dt(&button0, NULL);
     if (!gpio_is_ready_dt(&led0)) {
         return 0;
     }
     if (!gpio_is_ready_dt(&led1)) {
         return 0;
     }
-    if (!gpio_is_ready_dt(&button0)) {
-        return 0;
-    }
+
     ret = gpio_pin_configure_dt(&led0, GPIO_OUTPUT_ACTIVE);
     if (ret < 0) {
         return 0;
@@ -56,16 +50,6 @@ int main(void) {
     if (ret < 0) {
         return 0;
     }
-    ret = gpio_pin_configure_dt(&button0, GPIO_INPUT);
-    if (ret < 0) {
-        return 0;
-    }
-    ret = gpio_pin_interrupt_configure_dt(&button0, GPIO_INT_EDGE_TO_ACTIVE);
-    if (ret < 0) {
-        return 0;
-    }
-    gpio_init_callback(&button0_cb_data, button0_isr, BIT(button0.pin));
-    gpio_add_callback_dt(&button0, &button0_cb_data);
 
 #ifdef CONFIG_LOG
     int exercise_num = 2;
@@ -103,8 +87,4 @@ int main(void) {
         k_msleep(SLEEP_TIME_MS);
     }
     return 0;
-}
-
-void button0_isr(const struct device* port, struct gpio_callback* cb, gpio_port_pins_t pins) {
-    gpio_pin_toggle_dt(&led1);
 }

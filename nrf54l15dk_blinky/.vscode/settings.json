@@ -1,0 +1,5 @@
+{
+    "clangd.arguments": [
+        "--compile-commands-dir=${workspaceFolder}\\build\\nrf54l15dk_blinky"
+    ]
+}
