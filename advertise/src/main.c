@@ -4,6 +4,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
+#include <string.h>
 #include <zephyr/bluetooth/bluetooth.h>
 #include <zephyr/bluetooth/gap.h>
 #include <zephyr/bluetooth/uuid.h>
@@ -13,12 +14,12 @@ LOG_MODULE_REGISTER(main, LOG_LEVEL_INF);
 struct scan_device_info {
     char addr[BT_ADDR_LE_STR_LEN];
     char name[64];
-    bool has_name;
+    // bool has_name;
     uint8_t manuf_data[256]; // 存储制造商数据
-    size_t manuf_data_len;   // 制造商数据长度
-    bool has_manuf_data;     // 标记是否有制造商数据
+    uint8_t manuf_data_len;  // 制造商数据长度
+    // bool has_manuf_data;     // 标记是否有制造商数据
 };
-
+struct scan_device_info dev_info = {0};
 static void
 scan_cb(const bt_addr_le_t* addr, int8_t rssi, uint8_t adv_type, struct net_buf_simple* buf);
 
@@ -37,13 +38,16 @@ static bool data_cb(struct bt_data* data, void* user_data) {
             // 提取设备名称
             memcpy(dev_info->name, data->data, data->data_len);
             dev_info->name[data->data_len] = '\0';
-            dev_info->has_name             = true;
             break;
         case BT_DATA_MANUFACTURER_DATA:
             // 提取制造商数据
+            if (*data->data == 0x6f) {
+                LOG_HEXDUMP_INF(data->data, data->data_len, "manufacturer data");
+                LOG_INF("data_len: %u", data->data_len);
+            }
+
             memcpy(dev_info->manuf_data, data->data, data->data_len);
             dev_info->manuf_data_len = data->data_len;
-            dev_info->has_manuf_data = true;
             break;
         default: break;
     }
@@ -53,25 +57,31 @@ static bool data_cb(struct bt_data* data, void* user_data) {
 
 static void
 scan_cb(const bt_addr_le_t* addr, int8_t rssi, uint8_t adv_type, struct net_buf_simple* buf) {
-    struct scan_device_info dev_info = {0};
+    // struct scan_device_info dev_info = {0};
+    if (adv_type == BT_GAP_ADV_TYPE_ADV_IND) {
+        // LOG_INF("Advertisement packet received");
+    } else if (adv_type == BT_GAP_ADV_TYPE_SCAN_RSP) {
+        LOG_INF("Scan Response packet received");
+        memset(&dev_info, 0, sizeof(dev_info));
 
-    // Get address
-    bt_addr_le_to_str(addr, dev_info.addr, sizeof(dev_info.addr));
+        // Get address
+        bt_addr_le_to_str(addr, dev_info.addr, sizeof(dev_info.addr));
 
-    // Parse advertisement data for name
-    bt_data_parse(buf, data_cb, &dev_info);
+        // Parse advertisement data for name
+        bt_data_parse(buf, data_cb, &dev_info);
 
-    // LOG_INF("Device: [%s] (RSSI %d), length: %u", dev_info.addr, rssi, buf->len);
-    // LOG_INF("length: %u", buf->len);
-    if (memcmp(dev_info.name, "oket", 4) == 0 && dev_info.manuf_data_len > 0) {
-        LOG_HEXDUMP_INF(dev_info.manuf_data, dev_info.manuf_data_len, "manuf_data");
+        // LOG_INF("Device: [%s] (RSSI %d), length: %u", dev_info.addr, rssi, buf->len);
+        // LOG_INF("length: %u", buf->len);
+        if (memcmp(dev_info.name, "oket", 4) == 0) {
+            LOG_HEXDUMP_INF(dev_info.manuf_data, dev_info.manuf_data_len, "manuf_data");
+            LOG_INF("manuf_data_len: %u", dev_info.manuf_data_len);
+        }
+        // if (dev_info.has_name) {
+        //     LOG_HEXDUMP_INF(dev_info.name, strlen(dev_info.name), "name");
+        // }
+        // LOG_HEXDUMP_INF(dev_info.name, strlen(dev_info.name), "name");
+        return;
     }
-    if (dev_info.has_name) {
-        LOG_HEXDUMP_INF(dev_info.name, strlen(dev_info.name), "name");
-    }
-    // LOG_HEXDUMP_INF(dev_info.name, strlen(dev_info.name), "name");
-    LOG_INF("nothing");
-    return;
 
     // LOG_DBG("Advertisement data length: %u", buf->len);
     // LOG_INF("Device: [%s] (RSSI %d)", dev_info.addr, rssi);
