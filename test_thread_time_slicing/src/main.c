@@ -11,13 +11,10 @@
 #include "zephyr/sys/printk.h"
 
 /* 1000 msec = 1 sec */
-#define SLEEP_TIME_MS   1000
+#define SLEEP_TIME_MS 1000
 
 /* The devicetree node identifier for the "led0" alias. */
 #define LED0_NODE DT_ALIAS(led0)
-
-/*合作式调度，任务1和任务2交替执行，每个任务执行1s，任务优先级不同
-* */
 
 /*
  * A build error on this line means your board is unsupported.
@@ -30,7 +27,7 @@ void task1_fun(void) {
     while (1) {
         // LOG_INF("Task1\n");
         printk("Task1\n");
-        k_msleep(1000);
+        k_busy_wait(1000000);
     }
 }
 
@@ -38,35 +35,11 @@ void task2_fun(void) {
     while (1) {
         // LOG_INF("Task2\n");
         printk("Task2\n");
-        k_msleep(1000);
+        k_busy_wait(1000000);
     }
 }
 
+/* TIMESLICE_PRIORITY =0
+* time slicing only affect threads with the same priority level.*/
 K_THREAD_DEFINE(task1, 512, task1_fun, NULL, NULL, NULL, 2, 0, 0);
 K_THREAD_DEFINE(task2, 512, task2_fun, NULL, NULL, NULL, 5, 0, 0);
-
-// int main(void) {
-//     int ret;
-//     bool led_state = true;
-
-//     if (!gpio_is_ready_dt(&led)) {
-//         return 0;
-//     }
-
-//     ret = gpio_pin_configure_dt(&led, GPIO_OUTPUT_ACTIVE);
-//     if (ret < 0) {
-//         return 0;
-//     }
-
-//     while (1) {
-//         ret = gpio_pin_toggle_dt(&led);
-//         if (ret < 0) {
-//             return 0;
-//         }
-
-//         led_state = !led_state;
-//         LOG_INF("LED state: %s\n", led_state ? "ON" : "OFF");
-//         k_msleep(SLEEP_TIME_MS);
-//     }
-//     return 0;
-// }
