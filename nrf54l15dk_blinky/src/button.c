@@ -28,12 +28,14 @@ int button_init_dt(const struct gpio_dt_spec* spec, button_evt_cb_t cb) {
     }
     gpio_init_callback(&button0_cb_data, button0_isr, BIT(spec->pin));
     gpio_add_callback_dt(spec, &button0_cb_data);
+    k_work_init_delayable(&cooldown_work, cooldown_work_cb);
     return 0;
 }
 
 void button0_isr(const struct device* port, struct gpio_callback* cb, gpio_port_pins_t pins) {
     // gpio_pin_toggle_dt(&led1);
     k_work_reschedule(&cooldown_work, K_MSEC(15));
+    k_work_schedule(&cooldown_work, K_MSEC(15));
     LOG_INF("PORT: %p, PINS: %d", port, pins);
 }
 
