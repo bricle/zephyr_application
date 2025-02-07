@@ -9,86 +9,47 @@
 #include <zephyr/bluetooth/gap.h>
 #include <zephyr/bluetooth/uuid.h>
 #include <zephyr/logging/log.h>
+#include "zephyr/posix/sys/stat.h"
+#include "zephyr/sys/util.h"
+#include <dk_buttons_and_leds.h>
+
 LOG_MODULE_REGISTER(main, LOG_LEVEL_INF);
 
-struct scan_device_info {
-    char addr[BT_ADDR_LE_STR_LEN];
-    char name[64];
-    // bool has_name;
-    uint8_t manuf_data[256]; // 存储制造商数据
-    uint8_t manuf_data_len;  // 制造商数据长度
-    // bool has_manuf_data;     // 标记是否有制造商数据
+#define DEVICE_NAME     CONFIG_BT_DEVICE_NAME
+#define DEVICE_NAME_LEN (sizeof(DEVICE_NAME) - 1)
+#define COMPANY_ID_CODE 0x0059
+#define USER_BUTTON     DK_BTN1_MSK
+
+typedef struct adv_mfg_data {
+    uint16_t company_code; /* Company Identifier Code. */
+    uint16_t number_press; /* Number of times Button 1 is pressed*/
+} adv_mfg_data_type;
+
+static const struct bt_le_adv_param* ble_adv_param =
+    BT_LE_ADV_PARAM(BT_LE_ADV_OPT_NONE, 800, 801, NULL);
+
+static adv_mfg_data_type mfg_data = {
+    .company_code = COMPANY_ID_CODE,
+    .number_press = 0,
 };
-struct scan_device_info dev_info = {0};
-static void
-scan_cb(const bt_addr_le_t* addr, int8_t rssi, uint8_t adv_type, struct net_buf_simple* buf);
-
-static struct bt_le_scan_param scan_param = {
-    .type     = BT_LE_SCAN_TYPE_ACTIVE,
-    .options  = BT_LE_SCAN_OPT_NONE,
-    .interval = 3200,
-    .window   = 1600,
+/*BT_LE_AD_NO_BREDR means classic Bluetooth (BR/EDR) is not supported.*/
+static const struct bt_data ad[] = {
+    BT_DATA_BYTES(BT_DATA_FLAGS, (BT_LE_AD_NO_BREDR)),
+    BT_DATA(BT_DATA_NAME_COMPLETE, DEVICE_NAME, DEVICE_NAME_LEN),
+    BT_DATA(BT_DATA_MANUFACTURER_DATA, (uint8_t*)&mfg_data, sizeof(mfg_data)),
+    // BT_DATA_BYTES(BT_DATA_FLAGS, (BT_LE_AD_GENERAL | BT_LE_AD_NO_BREDR)),
+    // BT_DATA_BYTES(BT_DATA_UUID16_ALL, 0x00, 0x18),
+};
+static unsigned char url_data[] = {0x17, '/', '/', 'a', 'c', 'a', 'd', 'e', 'm', 'y', '.', 'n', 'o',
+                                   'r',  'd', 'i', 'c', 's', 'e', 'm', 'i', '.', 'c', 'o', 'm'};
+static const struct bt_data sd[] = {
+    BT_DATA(BT_DATA_URI, url_data, sizeof(url_data)),
 };
 
-static bool data_cb(struct bt_data* data, void* user_data) {
-    struct scan_device_info* dev_info = user_data;
+static int init_button(void);
+static void button_changed(uint32_t button_state, uint32_t has_changed);
 
-    switch (data->type) {
-        case BT_DATA_NAME_COMPLETE:
-            // 提取设备名称
-            memcpy(dev_info->name, data->data, data->data_len);
-            dev_info->name[data->data_len] = '\0';
-            break;
-        case BT_DATA_MANUFACTURER_DATA:
-            // 提取制造商数据
-            if (*data->data == 0x6f) {
-                LOG_HEXDUMP_INF(data->data, data->data_len, "manufacturer data");
-                LOG_INF("data_len: %u", data->data_len);
-            }
-
-            memcpy(dev_info->manuf_data, data->data, data->data_len);
-            dev_info->manuf_data_len = data->data_len;
-            break;
-        default: break;
-    }
-
-    return true; // 继续解析下一个字段
-}
-
-static void
-scan_cb(const bt_addr_le_t* addr, int8_t rssi, uint8_t adv_type, struct net_buf_simple* buf) {
-    // struct scan_device_info dev_info = {0};
-    if (adv_type == BT_GAP_ADV_TYPE_ADV_IND) {
-        // LOG_INF("Advertisement packet received");
-    } else if (adv_type == BT_GAP_ADV_TYPE_SCAN_RSP) {
-        LOG_INF("Scan Response packet received");
-        memset(&dev_info, 0, sizeof(dev_info));
-
-        // Get address
-        bt_addr_le_to_str(addr, dev_info.addr, sizeof(dev_info.addr));
-
-        // Parse advertisement data for name
-        bt_data_parse(buf, data_cb, &dev_info);
-
-        // LOG_INF("Device: [%s] (RSSI %d), length: %u", dev_info.addr, rssi, buf->len);
-        // LOG_INF("length: %u", buf->len);
-        if (memcmp(dev_info.name, "oket", 4) == 0) {
-            LOG_HEXDUMP_INF(dev_info.manuf_data, dev_info.manuf_data_len, "manuf_data");
-            LOG_INF("manuf_data_len: %u", dev_info.manuf_data_len);
-        }
-        // if (dev_info.has_name) {
-        //     LOG_HEXDUMP_INF(dev_info.name, strlen(dev_info.name), "name");
-        // }
-        // LOG_HEXDUMP_INF(dev_info.name, strlen(dev_info.name), "name");
-        return;
-    }
-
-    // LOG_DBG("Advertisement data length: %u", buf->len);
-    // LOG_INF("Device: [%s] (RSSI %d)", dev_info.addr, rssi);
-}
-
-int main(void)
-{
+int main(void) {
     printf("Hello World! %s\n", CONFIG_BOARD_TARGET);
     int err;
     err = bt_enable(NULL);
@@ -97,10 +58,33 @@ int main(void)
         return 0;
     }
     LOG_INF("Bluetooth initialized\n");
-    err = bt_le_scan_start(&scan_param, scan_cb);
+    // bt_id_create(bt_addr_le_t *addr, uint8_t *irk)
+    err = bt_le_adv_start(BT_LE_ADV_NCONN, ad, ARRAY_SIZE(ad), sd, ARRAY_SIZE(sd));
     if (err) {
-        printk("Starting scanning failed (err %d)\n", err);
+        LOG_INF("Advertising failed to start (err %d)\n", err);
         return 0;
     }
-    return 0;
+    err = init_button();
+    if (err) {
+        LOG_INF("Button init failed (err %d)\n", err);
+        return 0;
+    }
+}
+
+static int init_button(void) {
+    int err;
+
+    err = dk_buttons_init(button_changed);
+    if (err) {
+        printk("Cannot init buttons (err: %d)\n", err);
+    }
+
+    return err;
+}
+
+static void button_changed(uint32_t button_state, uint32_t has_changed) {
+    if (button_state & has_changed & USER_BUTTON) {
+        mfg_data.number_press++;
+        bt_le_adv_update_data(ad, ARRAY_SIZE(ad), sd, ARRAY_SIZE(sd));
+    }
 }
