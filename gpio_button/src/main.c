@@ -9,6 +9,7 @@
 #include <zephyr/kernel.h>
 #include <zephyr/logging/log.h>
 #include "button.h"
+#include "zephyr/devicetree.h"
 #ifdef CONFIG_MYFUNCTION
 #include "myFunc.h"
 #endif
@@ -17,12 +18,13 @@
 #define SLEEP_TIME_MS 1000
 
 /* The devicetree node identifier for the "led0" alias. */
-#define LED0_NODE    DT_ALIAS(led0)
-#define LED1_NODE    DT_ALIAS(led1)
-#define BUTTON0_NODE DT_ALIAS(sw0)
+#define LED0_NODE      DT_ALIAS(led0)
+#define LED1_NODE      DT_ALIAS(led1)
+#define BUTTON0_NODE   DT_ALIAS(sw0)
+#define USER_GPIO_NODE DT_PATH(zephyr_user)
 // #define BUTTON0_NODE DT_NODELABEL(button0)
 
-LOG_MODULE_REGISTER(blinking, LOG_LEVEL_INF);
+LOG_MODULE_REGISTER(test, LOG_LEVEL_INF);
 
 /*
  * A build error on this line means your board is unsupported.
@@ -31,6 +33,11 @@ LOG_MODULE_REGISTER(blinking, LOG_LEVEL_INF);
 static const struct gpio_dt_spec led0 = GPIO_DT_SPEC_GET(LED0_NODE, gpios);
 static const struct gpio_dt_spec led1 = GPIO_DT_SPEC_GET(LED1_NODE, gpios);
 const struct gpio_dt_spec button0     = GPIO_DT_SPEC_GET(BUTTON0_NODE, gpios);
+
+static const struct gpio_dt_spec gnss_pin  = GPIO_DT_SPEC_GET(USER_GPIO_NODE,
+                                                             test_gnss_reset_pin_gpios);
+static const struct gpio_dt_spec modem_pin = GPIO_DT_SPEC_GET(USER_GPIO_NODE,
+                                                              test_modem_pwron_pin_gpios);
 
 int main(void) {
     int ret;
@@ -43,12 +50,25 @@ int main(void) {
     if (!gpio_is_ready_dt(&led1)) {
         return 0;
     }
-
+    if (!gpio_is_ready_dt(&gnss_pin)) {
+        return 0;
+    }
+    if (!gpio_is_ready_dt(&modem_pin)) {
+        return 0;
+    }
     ret = gpio_pin_configure_dt(&led0, GPIO_OUTPUT_ACTIVE);
     if (ret < 0) {
         return 0;
     }
     ret = gpio_pin_configure_dt(&led1, GPIO_OUTPUT_ACTIVE);
+    if (ret < 0) {
+        return 0;
+    }
+    ret = gpio_pin_configure_dt(&gnss_pin, GPIO_OUTPUT_ACTIVE);
+    if (ret < 0) {
+        return 0;
+    }
+    ret = gpio_pin_configure_dt(&modem_pin, GPIO_OUTPUT_ACTIVE);
     if (ret < 0) {
         return 0;
     }
@@ -65,6 +85,14 @@ int main(void) {
 #endif
     while (1) {
         ret = gpio_pin_toggle_dt(&led0);
+        if (ret < 0) {
+            return 0;
+        }
+        ret = gpio_pin_toggle_dt(&gnss_pin);
+        if (ret < 0) {
+            return 0;
+        }
+        ret = gpio_pin_toggle_dt(&modem_pin);
         if (ret < 0) {
             return 0;
         }
