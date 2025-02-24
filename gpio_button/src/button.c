@@ -35,7 +35,6 @@ int button_init_dt(const struct gpio_dt_spec* spec, button_evt_cb_t cb) {
 void button0_isr(const struct device* port, struct gpio_callback* cb, gpio_port_pins_t pins) {
     // gpio_pin_toggle_dt(&led1);
     k_work_reschedule(&cooldown_work, K_MSEC(15));
-    k_work_schedule(&cooldown_work, K_MSEC(15));
     LOG_INF("PORT: %p, PINS: %d", port, pins);
 }
 
@@ -44,7 +43,7 @@ extern const struct gpio_dt_spec button0;
 static void cooldown_work_cb(struct k_work* work) {
     ARG_UNUSED(work);
     int val             = gpio_pin_get_dt(&button0);
-    enum button_evt evt = val == 1 ? BUTTON_EVT_PRESSED : BUTTON_EVT_RELEASED;
+    enum button_evt evt = (val == 1 ? BUTTON_EVT_PRESSED : BUTTON_EVT_RELEASED);
     switch (evt) {
         case BUTTON_EVT_PRESSED:  LOG_INF("Button pressed"); break;
         case BUTTON_EVT_RELEASED: LOG_INF("Button released"); break;

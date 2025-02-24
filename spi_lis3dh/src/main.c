@@ -8,10 +8,22 @@
 #include <lis3dh_driver.h>
 
 LOG_MODULE_REGISTER(main, LOG_LEVEL_DBG);
+
+typedef enum {
+    LIS3DH_STATE_STATIONARY, // Device is at rest
+    LIS3DH_STATE_MOVING      // Device is in motion
+} lis3dh_state_t;
+
+#define LIS3_INT_NODE DT_PATH(zephyr_user)
+static const struct gpio_dt_spec lis3_int = GPIO_DT_SPEC_GET(LIS3_INT_NODE, lis3dh_int_gpios);
+static struct gpio_callback lis3_int_cb;
+void lis3_int_isr(const struct device* port, struct gpio_callback* cb, gpio_port_pins_t pins);
+void lis3dh_work_cb(struct k_work* work);
+K_WORK_DELAYABLE_DEFINE(lis3dh_work, lis3dh_work_cb);
+
 // 模式00和模式11是最常用的两种SPI模式，模式00是时钟空闲时为低电平，数据采样时钟上升沿，模式11是时钟空闲时为高电平，数据采样时钟下降沿。
 // 并且这两种模式读出数据一致，都可用。
 #define SPIOP SPI_WORD_SET(8) | SPI_TRANSFER_MSB | SPI_MODE_CPOL | SPI_MODE_CPHA
-
 struct spi_dt_spec spispec = SPI_DT_SPEC_GET(DT_NODELABEL(lis3dh), SPIOP, 0);
 
 static int lis3dh_write_reg(uint8_t reg, uint8_t value) {
@@ -54,6 +66,24 @@ int main(void) {
         LOG_ERR("Error: SPI device is not ready, err: %d", err);
         return 0;
     }
+    err = gpio_is_ready_dt(&lis3_int);
+    if (!err) {
+        LOG_ERR("Error: GPIO device is not ready, err: %d", err);
+        return 0;
+    }
+    err = gpio_pin_configure_dt(&lis3_int, GPIO_INPUT);
+    if (err < 0) {
+        LOG_ERR("Error: gpio_pin_configure_dt() failed, err: %d", err);
+        return 0;
+    }
+    err = gpio_pin_interrupt_configure_dt(&lis3_int, GPIO_INT_EDGE_BOTH);
+    if (err < 0) {
+        LOG_ERR("Error: gpio_pin_interrupt_configure_dt() failed, err: %d", err);
+        return 0;
+    }
+    gpio_init_callback(&lis3_int_cb, lis3_int_isr, BIT(lis3_int.pin));
+    gpio_add_callback_dt(&lis3_int, &lis3_int_cb);
+    k_work_init_delayable(&lis3dh_work, lis3dh_work_cb);
     uint8_t data[2] = {0};
     // 重点，要读2个字节，第一个字节是dummy byte，第二个字节才是真正的数据
     lis3dh_read_reg(LIS3DH_WHO_AM_I, data, 2);
@@ -72,4 +102,22 @@ int main(void) {
     lis3dh_write_reg(LIS3DH_INT1_CFG, 0x2A);        //当XYZ轴加速度高于阈值，产生中断
 
     return 0;
+}
+
+void lis3_int_isr(const struct device* port, struct gpio_callback* cb, gpio_port_pins_t pins) {
+    k_work_reschedule(&lis3dh_work, K_MSEC(0));
+}
+
+void lis3dh_work_cb(struct k_work* work) {
+    int ret = gpio_pin_get_dt(&lis3_int);
+    if (ret < 0) {
+        LOG_ERR("Error: gpio_pin_get_dt() failed, err: %d", ret);
+        return;
+    }
+    lis3dh_state_t state = ret ? LIS3DH_STATE_MOVING : LIS3DH_STATE_STATIONARY;
+    switch (state) {
+        case LIS3DH_STATE_STATIONARY: LOG_INF("Stationary"); break;
+        case LIS3DH_STATE_MOVING:     LOG_INF("Moving"); break;
+        default:                      break;
+    }
 }
