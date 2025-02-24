@@ -16,8 +16,8 @@
 	status = "okay";
 	pinctrl-0 = <&spi21_default>;
 	pinctrl-names = "default";
-	bme280:bme280@0 {
-		compatible = "st,lis2dh";
+	lis3dh:lis3dh@0 {
+		compatible = "st,lis3dh-custom";
 		reg = <0x0>;
 		spi-max-frequency = <DT_FREQ_M(10)>;
 	};
