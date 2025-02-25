@@ -1,9 +1,4 @@
-/*
- * Copyright (c) 2012-2014 Wind River Systems, Inc.
- *
- * SPDX-License-Identifier: Apache-2.0
- */
-
+#include <stdint.h>
 #include <string.h>
 #include <zephyr/bluetooth/bluetooth.h>
 #include <zephyr/bluetooth/gap.h>
@@ -11,12 +6,15 @@
 #include <zephyr/logging/log.h>
 LOG_MODULE_REGISTER(main, LOG_LEVEL_INF);
 
+static const uint8_t manuf_header[4] = {0x6f, 0x6b, 0x64, 0x05};
+
 struct scan_device_info {
     char addr[BT_ADDR_LE_STR_LEN];
     char name[64];
     // bool has_name;
     uint8_t manuf_data[256]; // 存储制造商数据
     uint8_t manuf_data_len;  // 制造商数据长度
+    int8_t rssi;
     // bool has_manuf_data;     // 标记是否有制造商数据
 };
 struct scan_device_info dev_info = {0};
@@ -40,12 +38,6 @@ static bool data_cb(struct bt_data* data, void* user_data) {
             dev_info->name[data->data_len] = '\0';
             break;
         case BT_DATA_MANUFACTURER_DATA:
-            // 提取制造商数据
-            if (*data->data == 0x6f) {
-                LOG_HEXDUMP_INF(data->data, data->data_len, "manufacturer data");
-                LOG_INF("data_len: %u", data->data_len);
-            }
-
             memcpy(dev_info->manuf_data, data->data, data->data_len);
             dev_info->manuf_data_len = data->data_len;
             break;
@@ -59,37 +51,45 @@ static void
 scan_cb(const bt_addr_le_t* addr, int8_t rssi, uint8_t adv_type, struct net_buf_simple* buf) {
     // struct scan_device_info dev_info = {0};
     if (adv_type == BT_GAP_ADV_TYPE_ADV_IND) {
-        // LOG_INF("Advertisement packet received");
-    } else if (adv_type == BT_GAP_ADV_TYPE_SCAN_RSP) {
-        LOG_INF("Scan Response packet received");
         memset(&dev_info, 0, sizeof(dev_info));
-
+        dev_info.rssi = rssi;
         // Get address
         bt_addr_le_to_str(addr, dev_info.addr, sizeof(dev_info.addr));
 
         // Parse advertisement data for name
         bt_data_parse(buf, data_cb, &dev_info);
-
-        // LOG_INF("Device: [%s] (RSSI %d), length: %u", dev_info.addr, rssi, buf->len);
-        // LOG_INF("length: %u", buf->len);
-        if (memcmp(dev_info.name, "oket", 4) == 0) {
-            LOG_HEXDUMP_INF(dev_info.manuf_data, dev_info.manuf_data_len, "manuf_data");
-            LOG_INF("manuf_data_len: %u", dev_info.manuf_data_len);
+        if (dev_info.manuf_data_len <= sizeof(manuf_header)) {
+            return;
         }
-        // if (dev_info.has_name) {
-        //     LOG_HEXDUMP_INF(dev_info.name, strlen(dev_info.name), "name");
-        // }
-        // LOG_HEXDUMP_INF(dev_info.name, strlen(dev_info.name), "name");
+        if (memcmp(dev_info.manuf_data, manuf_header, sizeof(manuf_header)) != 0) {
+            return;
+        }
+        LOG_INF("............................................");
+        LOG_INF("oket beacon found");
+        LOG_INF("Device: [%s] (RSSI %d), ", dev_info.addr, rssi);
+        LOG_INF("oket beacon addr:[%d,%d]",
+                dev_info.manuf_data[2] << 8 | dev_info.manuf_data[3],
+                dev_info.manuf_data[4] << 8 | dev_info.manuf_data[5]);
+        LOG_HEXDUMP_INF(dev_info.manuf_data, dev_info.manuf_data_len, "manuf_data");
+        LOG_INF("............................................");
+
+    } else if (adv_type == BT_GAP_ADV_TYPE_SCAN_RSP) {
+        memset(&dev_info, 0, sizeof(dev_info));
+
+        // Get address
+        bt_addr_le_to_str(addr, dev_info.addr, sizeof(dev_info.addr));
+        // Parse advertisement data for name
+        bt_data_parse(buf, data_cb, &dev_info);
+
+        if (memcmp(dev_info.name, "oket", 4) == 0) {
+            // LOG_HEXDUMP_INF(dev_info.manuf_data, dev_info.manuf_data_len, "manuf_data");
+            // LOG_INF("manuf_data_len: %u", dev_info.manuf_data_len);
+        }
         return;
     }
-
-    // LOG_DBG("Advertisement data length: %u", buf->len);
-    // LOG_INF("Device: [%s] (RSSI %d)", dev_info.addr, rssi);
 }
 
-int main(void)
-{
-    printf("Hello World! %s\n", CONFIG_BOARD_TARGET);
+int main(void) {
     int err;
     err = bt_enable(NULL);
     if (err) {
