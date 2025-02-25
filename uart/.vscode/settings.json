@@ -1,5 +1,8 @@
 {
     "clangd.arguments": [
         "--compile-commands-dir=${workspaceFolder}\\build\\uart"
-    ]
+    ],
+    "nrf-connect.debugging.bindings": {
+        "${workspaceFolder}/build/uart": "Launch uart"
+    }
 }
