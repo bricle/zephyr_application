@@ -1,10 +1,3 @@
-/*
- * Copyright (c) 2016 Intel Corporation
- *
- * SPDX-License-Identifier: Apache-2.0
- */
-
-#include <stdint.h>
 #include <sys/_intsup.h>
 #include <zephyr/drivers/gpio.h>
 #include <zephyr/kernel.h>
@@ -19,7 +12,6 @@
 #define SLEEP_TIME_MS 500
 
 #define UART30 DT_NODELABEL(uart30)
-// #define BUTTON0_NODE DT_NODELABEL(button0)
 
 LOG_MODULE_REGISTER(uart, LOG_LEVEL_INF);
 
@@ -83,23 +75,6 @@ int main(void) {
         uart_send_str_int(uart30, "\r\n");
     }
 #endif
-    // uint8_t read_uart;
-    // do {
-    //     ret = uart_poll_in(uart30, &read_uart);
-    //     k_msleep(1);
-    // } while (ret == -1);
-    // if (ret == 0) {
-    //     printk("read a data %c\r\n", read_uart);
-    // } else if (ret == -1) {
-    //     printk("read nothing\r\n");
-    // } else if (ret == -ENOSYS) {
-    //     printk("error is nosys\r\n");
-    // } else if (ret == -EBUSY) {
-    //     printk("error busy\r\n");
-    // } else {
-    //     printk("not all above\r\n");
-    // }
-
     return 0;
 }
 
