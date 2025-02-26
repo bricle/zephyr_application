@@ -17,6 +17,9 @@ static void gnss_data_cb(const struct device* dev, const struct gnss_data* data)
     if (data->info.fix_status != GNSS_FIX_STATUS_NO_FIX) {
 		LOG_INF("Got a fix!");
     }
+    if (data->info.fix_quality == GNSS_FIX_QUALITY_RTK) {
+        LOG_INF("RTK fix!");
+    }
 }
 
 GNSS_DATA_CALLBACK_DEFINE(GNSS_MODEM, gnss_data_cb);
