@@ -57,7 +57,11 @@ int main(void) {
     LOG_INF("sent started\r\n");
 #endif
 #ifdef CONFIG_UART_INTERRUPT_DRIVEN
+    uart_irq_rx_disable(uart30);
+    uart_irq_tx_disable(uart30);
     ret = uart_irq_callback_user_data_set(uart30, uart_int_cb, NULL);
+    uart_irq_rx_enable(uart30);
+    LOG_INF("sdfsadfjskjdfklsajdflks\r\n");
 
     if (ret < 0) {
         if (ret == -ENOTSUP) {
@@ -69,13 +73,14 @@ int main(void) {
         }
         return 0;
     }
-    uart_irq_rx_enable(uart30);
-    uart_irq_tx_disable(uart30);
-    uart_send_str_polling(uart30, "uart30 echo test\n\r");
+    // uart_irq_rx_enable(uart30);
+    // uart_irq_tx_disable(uart30);
+    // uart_send_str_polling(uart30, "uart30 echo test\n\r");
+    // uart_irq_rx_enable(uart30);
 
-    ring_buf_init(&tx_irq_rb, sizeof(tx_irq_rb_buf), tx_irq_rb_buf);
-    uart_send(uart30, "uart30 int send test\n\r", sizeof("uart30 int send test\n\r"));
-    uart_send(uart30, "uart30 int send test\n\r", sizeof("uart30 int send test\n\r"));
+    // ring_buf_init(&tx_irq_rb, sizeof(tx_irq_rb_buf), tx_irq_rb_buf);
+    // uart_send(uart30, "uart30 int send test\n\r", sizeof("uart30 int send test\n\r"));
+    // uart_send(uart30, "uart30 int send test\n\r", sizeof("uart30 int send test\n\r"));
     // while (k_msgq_get(&uart_msgq, &tx_buf, K_FOREVER) == 0) {
     //     uint32_t cnt = atomic_get(&times);
     //     LOG_INF("...%d...times\r\n", cnt);
@@ -98,13 +103,15 @@ void uart_send_str_polling(const struct device* dev, char* data) {
 static int uart_send(const struct device* dev, const uint8_t* buf, size_t len) {
     int written = 0;
     uart_irq_tx_disable(uart30);
-    written = ring_buf_put(&tx_irq_rb, buf, len);
+    // written = ring_buf_put(&tx_irq_rb, buf, len);
     LOG_INF("rb written %d", written);
     uart_irq_tx_enable(uart30);
     return written;
 }
 static void uart_int_cb(const struct device* dev, void* user_data) {
     // times++;
+    LOG_INF("...uart_int_cb...\r\n");
+
     atomic_inc(&times);
     uint8_t c;
 
@@ -117,6 +124,8 @@ static void uart_int_cb(const struct device* dev, void* user_data) {
         return;
     }
     if (uart_irq_rx_ready(dev)) {
+        LOG_INF("uart_irq_tx_ ready\r\n");
+
         ret = uart_fifo_read(dev, rx_buf, UINT32_MAX);
         LOG_INF("...uart_fifo_read: %d...\r\n", ret);
         // while (uart_fifo_read(dev, &c, 1) == 1) {
@@ -136,25 +145,25 @@ static void uart_int_cb(const struct device* dev, void* user_data) {
         // }
     }
     LOG_INF("uart_irq_tx_ not ready\r\n");
-    if (uart_irq_tx_ready(dev)) {
-        if (ring_buf_is_empty(&tx_irq_rb) == true) {
-            uart_irq_tx_disable(dev);
-            LOG_INF("...tx_irq_rb is empty, disabled tx...\r\n");
-            return;
-        }
-        tx_size = ring_buf_get_claim(&tx_irq_rb, &tx_buf, UINT32_MAX);
-        LOG_INF("...tx_size claimed from ring buffer: %d...\r\n", tx_size);
-        ret     = uart_fifo_fill(dev, tx_buf, tx_size);
-        if (ret < 0) {
-            LOG_INF("uart_fifo_fill failed\r\n");
-            ring_buf_get_finish(&tx_irq_rb, 0);
-            return;
+    // if (uart_irq_tx_ready(dev)) {
+    //     if (ring_buf_is_empty(&tx_irq_rb) == true) {
+    //         uart_irq_tx_disable(dev);
+    //         LOG_INF("...tx_irq_rb is empty, disabled tx...\r\n");
+    //         return;
+    //     }
+    //     tx_size = ring_buf_get_claim(&tx_irq_rb, &tx_buf, UINT32_MAX);
+    //     LOG_INF("...tx_size claimed from ring buffer: %d...\r\n", tx_size);
+    //     ret     = uart_fifo_fill(dev, tx_buf, tx_size);
+    //     if (ret < 0) {
+    //         LOG_INF("uart_fifo_fill failed\r\n");
+    //         ring_buf_get_finish(&tx_irq_rb, 0);
+    //         return;
 
-        } else {
-            LOG_INF("uart_fifo_fill, ring buffer finished %d bytes\r\n", ret);
-            ring_buf_get_finish(&tx_irq_rb, (uint32_t)ret);
-        }
-    }
+    //     } else {
+    //         LOG_INF("uart_fifo_fill, ring buffer finished %d bytes\r\n", ret);
+    //         ring_buf_get_finish(&tx_irq_rb, (uint32_t)ret);
+    //     }
+    // }
     // LOG_INF("...uart_int_cb...\r\n");
 
     return;
