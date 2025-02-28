@@ -30,6 +30,14 @@
 		/delete-property/ led2;
 		/delete-property/ led3;
 	};
+	chosen {
+		zephyr,console = &rtt0;
+	};
+
+	rtt0: rtt_chan0 {
+		compatible = "segger,rtt-uart";
+		status = "okay";
+	};
 };
 
 

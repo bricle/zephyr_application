@@ -88,6 +88,10 @@ int main(void) {
     //     uart_send_str_polling(uart30, tx_buf);
     //     uart_send_str_polling(uart30, "\r\n");
     // }
+    while (1) {
+        k_sleep(K_MSEC(1000));
+        LOG_INF("...times\r\n");
+    }
 #endif
     return 0;
 }
