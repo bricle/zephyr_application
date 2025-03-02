@@ -27,7 +27,7 @@ K_MSGQ_DEFINE(uart_msgq, MSG_SIZE, 10, 4);
 /* receive buffer used in UART ISR callback */
 static char rx_buf[MSG_SIZE];
 static int rx_buf_pos;
-static atomic_t times = 0;
+static atomic_t times      = 0;
 struct ring_buf tx_irq_rb  = {0};
 uint8_t tx_irq_rb_buf[512] = {0};
 static void uart_int_cb(const struct device* dev, void* user_data);
@@ -36,7 +36,7 @@ void uart_send_str_polling(const struct device* dev, char* data);
 static int uart_send(const struct device* dev, const uint8_t* buf, size_t len);
 
 int main(void) {
-    char tx_buf[MSG_SIZE];
+    // char tx_buf[MSG_SIZE];
     int ret;
     if (!device_is_ready(uart30)) {
         return 0;
@@ -61,18 +61,18 @@ int main(void) {
     uart_irq_tx_disable(uart30);
     ret = uart_irq_callback_user_data_set(uart30, uart_int_cb, NULL);
     uart_irq_rx_enable(uart30);
-    LOG_INF("sdfsadfjskjdfklsajdflks\r\n");
+    LOG_INF("nmsl\r\n");
 
-    if (ret < 0) {
-        if (ret == -ENOTSUP) {
-            printk("Interrupt-driven UART API support not enabled\n");
-        } else if (ret == -ENOSYS) {
-            printk("UART device does not support interrupt-driven API\n");
-        } else {
-            printk("Error setting UART callback: %d\n", ret);
-        }
-        return 0;
-    }
+    // if (ret < 0) {
+    //     if (ret == -ENOTSUP) {
+    //         printk("Interrupt-driven UART API support not enabled\n");
+    //     } else if (ret == -ENOSYS) {
+    //         printk("UART device does not support interrupt-driven API\n");
+    //     } else {
+    //         printk("Error setting UART callback: %d\n", ret);
+    //     }
+    //     return 0;
+    // }
     // uart_irq_rx_enable(uart30);
     // uart_irq_tx_disable(uart30);
     // uart_send_str_polling(uart30, "uart30 echo test\n\r");
@@ -89,8 +89,9 @@ int main(void) {
     //     uart_send_str_polling(uart30, "\r\n");
     // }
     while (1) {
-        k_sleep(K_MSEC(1000));
         LOG_INF("...times\r\n");
+        // k_sleep(K_MSEC(1000));
+        k_msleep(1200);
     }
 #endif
     return 0;
@@ -112,11 +113,10 @@ static int uart_send(const struct device* dev, const uint8_t* buf, size_t len) {
     uart_irq_tx_enable(uart30);
     return written;
 }
-static void uart_int_cb(const struct device* dev, void* user_data) {
-    // times++;
-    LOG_INF("...uart_int_cb...\r\n");
 
+static void uart_int_cb(const struct device* dev, void* user_data) {
     atomic_inc(&times);
+    /* 移除中断处理中的日志输出以降低堆栈使用 */
     uint8_t c;
 
     int ret;
@@ -128,10 +128,10 @@ static void uart_int_cb(const struct device* dev, void* user_data) {
         return;
     }
     if (uart_irq_rx_ready(dev)) {
-        LOG_INF("uart_irq_tx_ ready\r\n");
+        // LOG_INF("uart_irq_tx_ ready\r\n");
 
         ret = uart_fifo_read(dev, rx_buf, UINT32_MAX);
-        LOG_INF("...uart_fifo_read: %d...\r\n", ret);
+        // LOG_INF("...uart_fifo_read: %d...\r\n", ret);
         // while (uart_fifo_read(dev, &c, 1) == 1) {
         //     if ((c == '\n' || c == '\r') && rx_buf_pos > 0) {
         //         /* terminate string */
@@ -148,7 +148,7 @@ static void uart_int_cb(const struct device* dev, void* user_data) {
         //     /* else: characters beyond buffer size are dropped */
         // }
     }
-    LOG_INF("uart_irq_tx_ not ready\r\n");
+    // LOG_INF("uart_irq_tx_ not ready\r\n");
     // if (uart_irq_tx_ready(dev)) {
     //     if (ring_buf_is_empty(&tx_irq_rb) == true) {
     //         uart_irq_tx_disable(dev);
