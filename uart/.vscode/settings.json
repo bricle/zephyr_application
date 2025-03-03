@@ -4,5 +4,6 @@
     ],
     "nrf-connect.debugging.bindings": {
         "${workspaceFolder}/build/uart": "Launch uart"
-    }
+    },
+    "idf.pythonInstallPath": "D:\\program\\.espressif\\tools\\idf-python\\3.11.2\\python.exe"
 }
