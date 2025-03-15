@@ -10,7 +10,8 @@
 /* STEP 3 - Include the header file of the Bluetooth LE stack */
 #include <zephyr/bluetooth/bluetooth.h>
 #include <zephyr/bluetooth/gap.h>
-
+#include <zephyr/bluetooth/uuid.h>
+#include <zephyr/bluetooth/addr.h>
 #include <dk_buttons_and_leds.h>
 
 LOG_MODULE_REGISTER(Lesson2_Exercise1, LOG_LEVEL_INF);
@@ -23,7 +24,7 @@ LOG_MODULE_REGISTER(Lesson2_Exercise1, LOG_LEVEL_INF);
 #define RUN_LED_BLINK_INTERVAL 1000
 #define USER_BUTTON            DK_BTN1_MSK
 static const struct bt_le_adv_param* adv_param =
-    BT_LE_ADV_PARAM(BT_LE_ADV_OPT_NONE, 800, 801, NULL);
+    BT_LE_ADV_PARAM(BT_LE_ADV_OPT_CONN | BT_LE_ADV_OPT_USE_IDENTITY, 800, 801, NULL);
 
 typedef struct {
     uint16_t company_id;
@@ -37,7 +38,7 @@ static adv_mfg_data_t adv_mfg_data = {
 /* STEP 4.1.1 - Declare the advertising packet */
 static const struct bt_data ad[] = {
     /* STEP 4.1.2 - Set the advertising flags */
-    BT_DATA_BYTES(BT_DATA_FLAGS, BT_LE_AD_NO_BREDR),
+    BT_DATA_BYTES(BT_DATA_FLAGS, BT_LE_AD_GENERAL | BT_LE_AD_NO_BREDR),
     /* STEP 4.1.3 - Set the advertising packet data  */
     BT_DATA(BT_DATA_NAME_COMPLETE, DEVICE_NAME, DEVICE_NAME_LEN),
     BT_DATA(BT_DATA_MANUFACTURER_DATA, (uint8_t*)&adv_mfg_data, sizeof(adv_mfg_data)),
@@ -51,7 +52,9 @@ static unsigned char url_data[] = {0x17, '/', '/', 'a', 'c', 'a', 'd', 'e', 'm',
 /* STEP 4.2.1 - Declare the scan response packet */
 static const struct bt_data sd[] = {
     /* 4.2.3 Include the URL data in the scan response packet */
-    BT_DATA(BT_DATA_URI, url_data, sizeof(url_data)),
+    // BT_DATA(BT_DATA_URI, url_data, sizeof(url_data)),
+    BT_DATA_BYTES(BT_DATA_UUID128_ALL,
+                  BT_UUID_128_ENCODE(0x00001523, 0x1212, 0xefde, 0x1523, 0x785feabcd123)),
 };
 
 static void button_changed(uint32_t button_state, uint32_t has_changed) {
@@ -88,6 +91,17 @@ int main(void) {
     if (err) {
 
         LOG_ERR("Button init failed (err %d)\n", err);
+        return -1;
+    }
+    bt_addr_le_t addr;
+    err = bt_addr_le_from_str("FF:EE:DD:CC:BB:AA", "random", &addr);
+    if (err < 0) {
+        LOG_ERR("Failed to parse address (err %d)\n", err);
+        return -1;
+    }
+    err = bt_id_create(&addr, NULL);
+    if (err < 0) {
+        LOG_ERR("Failed to create identity (err %d)\n", err);
         return -1;
     }
     /* STEP 5 - Enable the Bluetooth LE stack */
