@@ -13,7 +13,8 @@
 #include <zephyr/bluetooth/uuid.h>
 #include <zephyr/bluetooth/addr.h>
 #include <dk_buttons_and_leds.h>
-
+#include "zephyr/bluetooth/conn.h"
+#include <bluetooth/services/lbs.h>
 LOG_MODULE_REGISTER(Lesson2_Exercise1, LOG_LEVEL_INF);
 #define COMPANY_ID_CODE 0x0059
 
@@ -22,9 +23,15 @@ LOG_MODULE_REGISTER(Lesson2_Exercise1, LOG_LEVEL_INF);
 
 #define RUN_STATUS_LED         DK_LED4
 #define RUN_LED_BLINK_INTERVAL 1000
+#define CONNECTION_STATUS_LED  DK_LED2
+#define LBS_LED                DK_LED1
 #define USER_BUTTON            DK_BTN1_MSK
-static const struct bt_le_adv_param* adv_param =
-    BT_LE_ADV_PARAM(BT_LE_ADV_OPT_CONN | BT_LE_ADV_OPT_USE_IDENTITY, 800, 801, NULL);
+struct bt_conn* default_conn                   = NULL;
+static const struct bt_le_adv_param* adv_param = BT_LE_ADV_PARAM(BT_LE_ADV_OPT_CONN
+                                                                     | BT_LE_ADV_OPT_USE_IDENTITY,
+                                                                 BT_GAP_ADV_FAST_INT_MIN_1,
+                                                                 BT_GAP_ADV_FAST_INT_MIN_1,
+                                                                 NULL);
 
 typedef struct {
     uint16_t company_id;
@@ -57,11 +64,45 @@ static const struct bt_data sd[] = {
                   BT_UUID_128_ENCODE(0x00001523, 0x1212, 0xefde, 0x1523, 0x785feabcd123)),
 };
 
-static void button_changed(uint32_t button_state, uint32_t has_changed) {
-    if (has_changed & button_state & USER_BUTTON) {
-        adv_mfg_data.number_pressed += 1;
-        bt_le_adv_update_data(ad, ARRAY_SIZE(ad), sd, ARRAY_SIZE(sd));
+void on_connected(struct bt_conn* conn, uint8_t err) {
+    if (err) {
+        LOG_ERR("Failed to connect (err %d)\n", err);
+        return;
     }
+    LOG_INF("...Connected\n");
+    default_conn = bt_conn_ref(conn);
+    dk_set_led_on(CONNECTION_STATUS_LED);
+}
+
+void on_disconnected(struct bt_conn* conn, uint8_t reason) {
+    dk_set_led_off(CONNECTION_STATUS_LED);
+    if (default_conn) {
+        bt_conn_unref(default_conn);
+        // default_conn = NULL;
+    }
+    LOG_INF("Disconnected (reason %u)\n", reason);
+}
+
+struct bt_conn_cb conn_callbacks = {
+    .connected    = on_connected,
+    .disconnected = on_disconnected,
+};
+
+static void button_changed(uint32_t button_state, uint32_t has_changed) {
+    int err;
+    bool btn_ched = (has_changed & USER_BUTTON) ? true : false;
+    bool btn_pred = (button_state & USER_BUTTON) ? true : false;
+    if (btn_ched) {
+        LOG_INF("Button %s\n", btn_pred ? "pressed" : "released");
+        err = bt_lbs_send_button_state(btn_pred);
+        if (err) {
+            LOG_ERR("Failed to send button state, err %d\n", err);
+        }
+    }
+    // if (has_changed & button_state & USER_BUTTON) {
+    //     adv_mfg_data.number_pressed += 1;
+    //     bt_le_adv_update_data(ad, ARRAY_SIZE(ad), sd, ARRAY_SIZE(sd));
+    // }
 }
 
 static int init_button(void) {
@@ -75,6 +116,22 @@ static int init_button(void) {
     return err;
 }
 
+bool btn_cb(void) {
+    return dk_get_buttons() & USER_BUTTON;
+}
+
+void led_cb(const bool led_state) {
+    if (led_state) {
+        dk_set_led_on(LBS_LED);
+    } else {
+        dk_set_led_off(LBS_LED);
+    }
+}
+
+struct bt_lbs_cb lbs_cb = {
+    .led_cb    = led_cb,
+    .button_cb = btn_cb,
+};
 int main(void) {
     int blink_status = 0;
     int err;
@@ -93,6 +150,11 @@ int main(void) {
         LOG_ERR("Button init failed (err %d)\n", err);
         return -1;
     }
+    err = bt_lbs_init(&lbs_cb);
+    if (err) {
+        LOG_ERR("Failed to init LBS (err %d)\n", err);
+        return -1;
+    }
     bt_addr_le_t addr;
     err = bt_addr_le_from_str("FF:EE:DD:CC:BB:AA", "random", &addr);
     if (err < 0) {
@@ -104,9 +166,13 @@ int main(void) {
         LOG_ERR("Failed to create identity (err %d)\n", err);
         return -1;
     }
-    /* STEP 5 - Enable the Bluetooth LE stack */
+    err = bt_conn_cb_register(&conn_callbacks);
+    if (err < 0) {
+        LOG_ERR("Failed to register connection callbacks (err %d)\n", err);
+        return -1;
+    }
     err = bt_enable(NULL);
-    if (err) {
+    if (err < 0) {
         LOG_ERR("Bluetooth init failed (err %d)\n", err);
         return -1;
     }

@@ -3,6 +3,6 @@
         "--compile-commands-dir=${workspaceFolder}/build/dwm3001cdk_conn"
     ],
     "nrf-connect.debugging.bindings": {
-        "${workspaceFolder}/build/dwm3001cdk_ble": "Launch dwm3001cdk_ble"
+        "${workspaceFolder}/build/dwm3001cdk_ble": "Launch dwm3001cdk_conn"
     }
 }
