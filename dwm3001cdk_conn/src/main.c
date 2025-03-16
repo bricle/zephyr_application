@@ -14,6 +14,7 @@
 #include <zephyr/bluetooth/addr.h>
 #include <dk_buttons_and_leds.h>
 #include "zephyr/bluetooth/conn.h"
+#include "zephyr/bluetooth/gatt.h"
 #include <bluetooth/services/lbs.h>
 LOG_MODULE_REGISTER(Lesson2_Exercise1, LOG_LEVEL_INF);
 #define COMPANY_ID_CODE 0x0059
@@ -64,6 +65,47 @@ static const struct bt_data sd[] = {
                   BT_UUID_128_ENCODE(0x00001523, 0x1212, 0xefde, 0x1523, 0x785feabcd123)),
 };
 
+static void update_data_len(struct bt_conn* conn) {
+    int err;
+    struct bt_conn_le_data_len_param my_param = {
+        .tx_max_len  = BT_GAP_DATA_LEN_MAX,
+        .tx_max_time = BT_GAP_DATA_TIME_MAX,
+    };
+    err = bt_conn_le_data_len_update(conn, &my_param);
+    if (err) {
+        LOG_ERR("data len update failed (err %d)", err);
+    }
+};
+
+static void ex_func(struct bt_conn* conn, uint8_t att_err, struct bt_gatt_exchange_params* params) {
+    LOG_INF("MTU exchange %s", att_err == 0 ? "successful" : "failed");
+    if (!att_err) {
+        uint16_t payload_mtu = bt_gatt_get_mtu(conn) - 3; // 3 bytes used for Attribute headers.
+        LOG_INF("New MTU: %d bytes", payload_mtu);
+    }
+}
+static struct bt_gatt_exchange_params exchange_params;
+
+static void update_mtu(struct bt_conn* conn) {
+    int err;
+    exchange_params.func = ex_func;
+    err                  = bt_gatt_exchange_mtu(conn, &exchange_params);
+    if (err) {
+        LOG_ERR("bt gatt ex mtu failed (err %d)", err);
+    }
+}
+
+void on_le_data_len_updated(struct bt_conn* conn, struct bt_conn_le_data_len_info* info) {
+    uint16_t tx_len  = info->tx_max_len;
+    uint16_t tx_time = info->tx_max_time;
+    uint16_t rx_len  = info->rx_max_len;
+    uint16_t rx_time = info->rx_max_time;
+    LOG_INF("Data length updated. Length %d/%d bytes, time %d/%d us",
+            tx_len,
+            rx_len,
+            tx_time,
+            rx_time);
+}
 void on_connected(struct bt_conn* conn, uint8_t err) {
     if (err) {
         LOG_ERR("Failed to connect (err %d)\n", err);
@@ -72,6 +114,23 @@ void on_connected(struct bt_conn* conn, uint8_t err) {
     LOG_INF("...Connected\n");
     default_conn = bt_conn_ref(conn);
     dk_set_led_on(CONNECTION_STATUS_LED);
+    struct bt_conn_info info;
+    bt_conn_get_info(default_conn, &info);
+    LOG_INF("Connected to %02x:%02x:%02x:%02x:%02x:%02x\n",
+            info.le.dst->a.val[5],
+            info.le.dst->a.val[4],
+            info.le.dst->a.val[3],
+            info.le.dst->a.val[2],
+            info.le.dst->a.val[1],
+            info.le.dst->a.val[0]);
+    double coon_intvl = info.le.interval * 1.25;
+    uint16_t spv_tmo  = info.le.timeout * 10;
+    LOG_INF("coon parameter: interval: %.2f ms; latency %d intervals, timeout %d ms",
+            coon_intvl,
+            info.le.latency,
+            spv_tmo);
+    update_data_len(conn);
+    update_mtu(conn);
 }
 
 void on_disconnected(struct bt_conn* conn, uint8_t reason) {
@@ -83,9 +142,23 @@ void on_disconnected(struct bt_conn* conn, uint8_t reason) {
     LOG_INF("Disconnected (reason %u)\n", reason);
 }
 
+void on_le_param_updated(struct bt_conn* conn,
+                         uint16_t interval,
+                         uint16_t latency,
+                         uint16_t timeout) {
+    double coon_intvl = interval * 1.25;
+    uint16_t spv_tmo  = timeout * 10;
+    LOG_INF("connection parameter updated: interval: %.2f ms; latency %d intervals, timeout %d ms",
+            coon_intvl,
+            latency,
+            spv_tmo);
+};
+
 struct bt_conn_cb conn_callbacks = {
-    .connected    = on_connected,
-    .disconnected = on_disconnected,
+    .connected           = on_connected,
+    .disconnected        = on_disconnected,
+    .le_param_updated    = on_le_param_updated,
+    .le_data_len_updated = on_le_data_len_updated,
 };
 
 static void button_changed(uint32_t button_state, uint32_t has_changed) {
@@ -132,6 +205,7 @@ struct bt_lbs_cb lbs_cb = {
     .led_cb    = led_cb,
     .button_cb = btn_cb,
 };
+
 int main(void) {
     int blink_status = 0;
     int err;
