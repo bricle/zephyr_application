@@ -7,6 +7,13 @@
 			"name": "Launch dwm3001cdk_ble",
 			"config": "${workspaceFolder}/build/dwm3001cdk_conn_data_ex",
 			"runToEntryPoint": "main"
+		},
+		{
+			"type": "nrf-connect",
+			"request": "launch",
+			"name": "Launch dwm3001cdk_conn_data_ex",
+			"config": "${workspaceFolder}/build/dwm3001cdk_conn_data_ex",
+			"runToEntryPoint": "main"
 		}
 	]
 }

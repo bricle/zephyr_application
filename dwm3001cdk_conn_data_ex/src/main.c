@@ -104,6 +104,7 @@ struct bt_conn_cb conn_callbacks = {
     .disconnected = on_disconnected,
 
 };
+static uint32_t user_button_state;
 
 static void button_changed(uint32_t button_state, uint32_t has_changed) {
     int err;
@@ -111,10 +112,11 @@ static void button_changed(uint32_t button_state, uint32_t has_changed) {
     bool btn_pred = (button_state & USER_BUTTON) ? true : false;
     if (btn_ched) {
         LOG_INF("Button %s\n", btn_pred ? "pressed" : "released");
-
-    // if (has_changed & button_state & USER_BUTTON) {
-    //     adv_mfg_data.number_pressed += 1;
-    //     bt_le_adv_update_data(ad, ARRAY_SIZE(ad), sd, ARRAY_SIZE(sd));
+        user_button_state = button_state & USER_BUTTON;
+        my_lbs_sent_btn_indi(user_button_state);
+        // if (has_changed & button_state & USER_BUTTON) {
+        //     adv_mfg_data.number_pressed += 1;
+        //     bt_le_adv_update_data(ad, ARRAY_SIZE(ad), sd, ARRAY_SIZE(sd));
     }
 }
 
@@ -144,6 +146,14 @@ struct bt_lbs_cb lbs_cb = {
     .led_write   = led_cb,
     .button_read = btn_cb,
 };
+static uint32_t app_sensor_value = 100;
+
+static void simulate_data(void) {
+    app_sensor_value++;
+    if (app_sensor_value == 200) {
+        app_sensor_value = 100;
+    }
+}
 int main(void) {
     int blink_status = 0;
     int err;
@@ -199,6 +209,10 @@ int main(void) {
 
     for (;;) {
         dk_set_led(RUN_STATUS_LED, (++blink_status) % 2);
+        /* Simulate data */
+        simulate_data();
+        /* Send notification, the function sends notifications only if a client is subscribed */
+        my_lbs_send_sensor_notify(app_sensor_value);
         k_sleep(K_MSEC(RUN_LED_BLINK_INTERVAL));
     }
 }
