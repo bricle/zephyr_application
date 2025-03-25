@@ -1,0 +1,16 @@
+{
+  "pages":[
+    "index/index"
+  ],
+  "window":{
+    "backgroundTextStyle":"light",
+    "navigationBarBackgroundColor": "#fff",
+    "navigationBarTitleText": "WeChat",
+    "navigationBarTextStyle":"black"
+  },
+  "permission": {
+    "scope.bluetooth": {
+      "desc": "蓝牙功能需要使用您的蓝牙权限"
+    }
+  }
+}
