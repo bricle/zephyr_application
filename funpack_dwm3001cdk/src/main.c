@@ -15,8 +15,10 @@
 #include "zephyr/bluetooth/conn.h"
 #include <zephyr/drivers/display.h>
 #include <zephyr/display/cfb.h>
+#include <zephyr/drivers/led_strip.h>
 #include <stdio.h>
 #include "my_lbs.h"
+#include "numbers.h"
 #include "logo.h"
 LOG_MODULE_REGISTER(FUNPACK_DWM3001CDK, LOG_LEVEL_INF);
 #define COMPANY_ID_CODE 0x0059
@@ -72,6 +74,28 @@ static const struct bt_data sd[] = {
     BT_DATA_BYTES(BT_DATA_UUID128_ALL,
                   BT_UUID_128_ENCODE(0x00001523, 0x1212, 0xefde, 0x1523, 0x785feabcd123)),
 };
+
+#define STRIP_NODE DT_ALIAS(led_strip)
+
+#if DT_NODE_HAS_PROP(DT_ALIAS(led_strip), chain_length)
+#define STRIP_NUM_PIXELS DT_PROP(DT_ALIAS(led_strip), chain_length)
+#else
+#error Unable to determine length of LED strip
+#endif
+
+#define DELAY_TIME K_MSEC(CONFIG_SAMPLE_LED_UPDATE_DELAY)
+
+#define RGB(_r, _g, _b) {.r = (_r), .g = (_g), .b = (_b)}
+
+static const struct led_rgb colors[] = {
+    RGB(CONFIG_SAMPLE_LED_BRIGHTNESS, 0x00, 0x00), /* red */
+    RGB(0x00, CONFIG_SAMPLE_LED_BRIGHTNESS, 0x00), /* green */
+    RGB(0x00, 0x00, CONFIG_SAMPLE_LED_BRIGHTNESS), /* blue */
+};
+
+static struct led_rgb pixels[STRIP_NUM_PIXELS];
+
+static const struct device* const strip = DEVICE_DT_GET(STRIP_NODE);
 
 void on_connected(struct bt_conn* conn, uint8_t err) {
     if (err) {
@@ -174,6 +198,45 @@ void send_data_thread(void) {
     }
 }
 
+#define LED_MATRIX_SIZE 8
+#define NUM_PIXELS      (LED_MATRIX_SIZE * LED_MATRIX_SIZE)
+#define DISPLAY_DELAY   2000 // 每个数字显示2秒
+
+// 获取LED矩阵中LED的索引
+#define LED_INDEX(row, col) ((row) * LED_MATRIX_SIZE + (col))
+
+// LED像素缓冲区
+static struct led_rgb pixels[STRIP_NUM_PIXELS];
+
+static void clear_display(struct led_rgb* pixels) {
+    const struct led_rgb color_off = LED_COLOR_OFF;
+    for (int i = 0; i < STRIP_NUM_PIXELS; i++) {
+        pixels[i] = color_off;
+    }
+}
+
+static void display_number(const struct device* strip, struct led_rgb* pixels, uint8_t number) {
+    const struct led_rgb color_on  = LED_COLOR_WHITE;
+    const struct led_rgb color_off = LED_COLOR_OFF;
+
+    if (number > 9) {
+        return;
+    }
+
+    // 更新像素缓冲区
+    for (int row = 0; row < LED_MATRIX_SIZE; row++) {
+        for (int col = 0; col < LED_MATRIX_SIZE; col++) {
+            int idx     = LED_INDEX(row, col);
+            pixels[idx] = NUMBERS[number][row][col] ? color_on : color_off;
+        }
+    }
+
+    // 更新LED条
+    int ret = led_strip_update_rgb(strip, pixels, STRIP_NUM_PIXELS);
+    if (ret) {
+        printk("Failed to update strip: %d\n", ret);
+    }
+}
 int main(void) {
     int blink_status = 0;
     int err;
@@ -281,10 +344,27 @@ int main(void) {
     //     LOG_ERR("could not set display contrast");
     // }
     size_t ms_sleep = 50;
+    size_t color    = 0;
+    int rc;
+
+    if (device_is_ready(strip)) {
+        LOG_INF("Found LED strip device %s", strip->name);
+    } else {
+        LOG_ERR("LED strip device %s is not ready", strip->name);
+        return 0;
+    }
+
+    LOG_INF("Displaying pattern on strip");
     for (;;) {
+        // 循环显示数字0-9
+        for (int num = 0; num < 10; num++) {
+            printk("Displaying number %d\n", num);
+            display_number(strip, pixels, num);
+            k_msleep(DISPLAY_DELAY);
+        }
         // dk_set_led(RUN_STATUS_LED, (++blink_status) % 2);
 
-        k_sleep(K_MSEC(RUN_LED_BLINK_INTERVAL));
+        // k_sleep(K_MSEC(RUN_LED_BLINK_INTERVAL));
         // for (size_t i = 0; i < 255; i++) {
         //     display_set_contrast(display, i);
         //     k_sleep(K_MSEC(ms_sleep));
