@@ -9,6 +9,7 @@ target_sources(app PRIVATE
 src/main.c 
 src/my_lbs.c
 src/bh1750_sensor.c
+src/led_strip.c
 )
 zephyr_library_include_directories(.)
 set(BOARD_FLASH_RUNNER jlink)

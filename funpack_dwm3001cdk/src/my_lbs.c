@@ -57,6 +57,23 @@ static ssize_t write_led(struct bt_conn* conn,
     return len;
 };
 
+static ssize_t strip_display_number(struct bt_conn* conn,
+                                    const struct bt_gatt_attr* attr,
+                                    const void* buf,
+                                    uint16_t len,
+                                    uint16_t offset,
+                                    uint8_t flags) {
+    LOG_DBG("attribute write, handle: %u, conn: %p", attr->handle, (void*)conn);
+    LOG_DBG("... len: %u, offset: %u, flags: %u", len, offset, flags);
+    if (lbs_cb.led_strip_display_number) {
+        // Get the value directly from the buffer
+        uint8_t number = *((uint8_t*)buf);
+        LOG_DBG("number: %u", number);
+        // Pass the value directly to the callback
+        lbs_cb.led_strip_display_number(number);
+    }
+    return len;
+};
 bool indicate_enabled;
 bool notify_mysensor_enabled;
 static struct bt_gatt_indicate_params indi_params;
@@ -93,7 +110,13 @@ BT_GATT_SERVICE_DEFINE(my_lbs,
                                               NULL,
                                               NULL),
                        BT_GATT_CCC(mylbsbc_ccc_mysensor_cfg_changed,
-                                   BT_GATT_PERM_READ | BT_GATT_PERM_WRITE), );
+                                   BT_GATT_PERM_READ | BT_GATT_PERM_WRITE),
+                       BT_GATT_CHARACTERISTIC(BT_UUID_LBS_LED_STRIP,
+                                              BT_GATT_CHRC_WRITE,
+                                              BT_GATT_PERM_WRITE,
+                                              NULL,
+                                              strip_display_number,
+                                              NULL));
 
 void indi_cb(struct bt_conn* conn, struct bt_gatt_indicate_params* params, uint8_t err) {
     if (err != 0) {
@@ -130,6 +153,7 @@ int my_lbs_init(const struct bt_lbs_cb* callbacks) {
     if (callbacks) {
         lbs_cb.led_write   = callbacks->led_write;
         lbs_cb.button_read = callbacks->button_read;
+        lbs_cb.led_strip_display_number = callbacks->led_strip_display_number;
     }
 
     return 0;
