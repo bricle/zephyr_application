@@ -229,12 +229,10 @@ int main(void) {
     LOG_INF("current_pixel_format: %d", capabilities.current_pixel_format);
     LOG_INF("current_orientation: %d", capabilities.current_orientation);
     led_strip_init();
+    led_strip_set_char_spacing(0);
+    led_strip_scroll_text("Hello, world!", SCROLL_LEFT);
     for (;;) {
-        // 循环显示数字0-9
-        // for (int num = 0; num < 10; num++) {
-        //     printk("Displaying number %d\n", num);
-        //     led_strip_display_number(num);
-        //     k_msleep(1500);
-        // }
+        led_strip_scroll_update();
+        k_msleep(250);
     }
 }
