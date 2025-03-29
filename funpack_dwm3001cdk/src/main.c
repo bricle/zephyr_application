@@ -1,9 +1,3 @@
-/*
- * Copyright (c) 2023 Nordic Semiconductor ASA
- *
- * SPDX-License-Identifier: LicenseRef-Nordic-5-Clause
- */
-
 #include <stdint.h>
 #include <zephyr/kernel.h>
 #include <zephyr/logging/log.h>
@@ -20,7 +14,6 @@
 #include <stdio.h>
 #include "my_lbs.h"
 #include "numbers.h"
-#include "logo.h"
 LOG_MODULE_REGISTER(FUNPACK_DWM3001CDK, LOG_LEVEL_INF);
 #define COMPANY_ID_CODE 0x0059
 
@@ -179,25 +172,6 @@ struct bt_lbs_cb lbs_cb = {
     .led_write   = led_cb,
     .button_read = btn_cb,
 };
-static uint32_t app_sensor_value = 100;
-
-static void simulate_data(void) {
-    app_sensor_value++;
-    if (app_sensor_value == 200) {
-        app_sensor_value = 100;
-    }
-}
-
-void send_data_thread(void) {
-    while (1) {
-        /* Simulate data */
-        simulate_data();
-        /* Send notification, the function sends notifications only if a client is subscribed */
-        my_lbs_send_sensor_notify(app_sensor_value);
-
-        k_sleep(K_MSEC(1500));
-    }
-}
 
 #define LED_MATRIX_SIZE 8
 #define NUM_PIXELS      (LED_MATRIX_SIZE * LED_MATRIX_SIZE)
@@ -237,26 +211,6 @@ static void display_number(const struct device* strip, struct led_rgb* pixels, u
     if (ret) {
         printk("Failed to update strip: %d\n", ret);
     }
-}
-
-static const struct device* get_bh1750_device(void) {
-    const struct device* const dev = DEVICE_DT_GET_ANY(rohm_bh1750);
-
-    if (dev == NULL) {
-        // No such node, or the node does not have status "okay".
-        LOG_ERR("no device found");
-        return NULL;
-    }
-
-    if (!device_is_ready(dev)) {
-        LOG_ERR("Device \"%s\" is not ready; "
-                "check the driver initialization logs for errors.",
-                dev->name);
-        return NULL;
-    }
-
-    LOG_INF("Found device \"%s\", getting sensor data\n", dev->name);
-    return dev;
 }
 
 int main(void) {
@@ -353,22 +307,6 @@ int main(void) {
     LOG_INF("current_pixel_format: %d", capabilities.current_pixel_format);
     LOG_INF("current_orientation: %d", capabilities.current_orientation);
 
-    const struct display_buffer_descriptor buf_desc = {.width    = x_res,
-                                                       .height   = y_res,
-                                                       .buf_size = x_res * y_res,
-                                                       .pitch    = DISPLAY_BUFFER_PITCH};
-
-    // if (display_write(display, 0, 0, &buf_desc, buf) != 0) {
-    //     LOG_ERR("could not write to display");
-    // }
-
-    // if (display_set_contrast(display, 0) != 0) {
-    //     LOG_ERR("could not set display contrast");
-    // }
-    size_t ms_sleep = 50;
-    size_t color    = 0;
-    int rc;
-
     if (device_is_ready(strip)) {
         LOG_INF("Found LED strip device %s", strip->name);
     } else {
@@ -378,45 +316,14 @@ int main(void) {
 
     LOG_INF("Displaying pattern on strip");
 
-    const struct device* ddev = get_bh1750_device();
     for (;;) {
         // 循环显示数字0-9
         for (int num = 0; num < 10; num++) {
             printk("Displaying number %d\n", num);
             display_number(strip, pixels, num);
             k_msleep(DISPLAY_DELAY);
-            struct sensor_value light;
-
-            LOG_INF("Fetching sensor data");
-
-            sensor_sample_fetch(ddev);
-
-            LOG_INF("Fetching sensor data done");
-
-            sensor_channel_get(ddev, SENSOR_CHAN_ALL, &light);
-
-            // if (light.val1 == 0) {
-            //     // turn on built in led
-            //     gpio_pin_toggle_dt(&led);
-            // }
-
-            printk("Light: %d.%06d\n", light.val1, light.val2);
-            k_sleep(K_MSEC(2000));
         }
-        // dk_set_led(RUN_STATUS_LED, (++blink_status) % 2);
-
-        // k_sleep(K_MSEC(RUN_LED_BLINK_INTERVAL));
-        // for (size_t i = 0; i < 255; i++) {
-        //     display_set_contrast(display, i);
-        //     k_sleep(K_MSEC(ms_sleep));
-        // }
-
-        // // Decrease brightness
-        // for (size_t i = 255; i > 0; i--) {
-        //     display_set_contrast(display, i);
-        //     k_sleep(K_MSEC(ms_sleep));
-        // }
     }
 }
 
-K_THREAD_DEFINE(send_data_thread_id, STACKSIZE, send_data_thread, NULL, NULL, NULL, PRIORITY, 0, 0);
+// K_THREAD_DEFINE(send_data_thread_id, STACKSIZE, send_data_thread, NULL, NULL, NULL, PRIORITY, 0, 0);

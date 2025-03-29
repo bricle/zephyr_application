@@ -41,6 +41,12 @@ module.exports.len = function(arr) {
       <button bindtap="turnOnLED">打开LED</button>
       <button bindtap="turnOffLED">关闭LED</button>
     </view>
+    
+    <!-- 添加光照传感器显示 -->
+    <view class="sensor-panel">
+      <text class="sensor-label">光照强度：</text>
+      <text class="sensor-value">{{sensorValue}} LUX</text>
+    </view>
   </view>
 </view>
 

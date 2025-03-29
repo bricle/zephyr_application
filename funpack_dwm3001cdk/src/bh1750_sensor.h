@@ -1,0 +1,4 @@
+#ifndef BH1750_SENSOR_H_
+#define BH1750_SENSOR_H_
+
+#endif // BH1750_SENSOR_H_

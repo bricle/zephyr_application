@@ -27,7 +27,8 @@ Page({
     deviceName: '',
     connected: false,
     serviceId: '',
-    characteristicId: ''
+    characteristicId: '',
+    sensorValue: 0  // 添加传感器数值
   },
 
   // 扫描并连接设备
@@ -103,6 +104,29 @@ Page({
                     for (let char of res.characteristics) {
                       if (char.uuid.toLowerCase().includes('1534')) {
                         this.setData({ characteristicId: char.uuid });
+                      }
+                      // 添加对传感器特征值的处理
+                      if (char.uuid.toLowerCase().includes('1535')) {
+                        // 启用传感器数据通知
+                        wx.notifyBLECharacteristicValueChange({
+                          deviceId: this.data.deviceId,
+                          serviceId: this.data.serviceId,
+                          characteristicId: char.uuid,
+                          state: true,
+                          success: () => {
+                            console.log('光照传感器通知启用成功');
+                            // 监听传感器数据
+                            wx.onBLECharacteristicValueChange((result) => {
+                              if(result.characteristicId.toLowerCase().includes('1535')) {
+                                const value = new DataView(result.value).getUint32(0, true);
+                                this.setData({
+                                  sensorValue: value
+                                });
+                              }
+                            });
+                          },
+                          fail: (error) => console.log('启用传感器通知失败:', error)
+                        });
                       }
                     }
                   },
