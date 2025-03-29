@@ -16,6 +16,7 @@
 #include <zephyr/drivers/display.h>
 #include <zephyr/display/cfb.h>
 #include <zephyr/drivers/led_strip.h>
+#include <zephyr/drivers/sensor.h>
 #include <stdio.h>
 #include "my_lbs.h"
 #include "numbers.h"
@@ -237,6 +238,27 @@ static void display_number(const struct device* strip, struct led_rgb* pixels, u
         printk("Failed to update strip: %d\n", ret);
     }
 }
+
+static const struct device* get_bh1750_device(void) {
+    const struct device* const dev = DEVICE_DT_GET_ANY(rohm_bh1750);
+
+    if (dev == NULL) {
+        // No such node, or the node does not have status "okay".
+        LOG_ERR("no device found");
+        return NULL;
+    }
+
+    if (!device_is_ready(dev)) {
+        LOG_ERR("Device \"%s\" is not ready; "
+                "check the driver initialization logs for errors.",
+                dev->name);
+        return NULL;
+    }
+
+    LOG_INF("Found device \"%s\", getting sensor data\n", dev->name);
+    return dev;
+}
+
 int main(void) {
     int blink_status = 0;
     int err;
@@ -355,12 +377,31 @@ int main(void) {
     }
 
     LOG_INF("Displaying pattern on strip");
+
+    const struct device* ddev = get_bh1750_device();
     for (;;) {
         // 循环显示数字0-9
         for (int num = 0; num < 10; num++) {
             printk("Displaying number %d\n", num);
             display_number(strip, pixels, num);
             k_msleep(DISPLAY_DELAY);
+            struct sensor_value light;
+
+            LOG_INF("Fetching sensor data");
+
+            sensor_sample_fetch(ddev);
+
+            LOG_INF("Fetching sensor data done");
+
+            sensor_channel_get(ddev, SENSOR_CHAN_ALL, &light);
+
+            // if (light.val1 == 0) {
+            //     // turn on built in led
+            //     gpio_pin_toggle_dt(&led);
+            // }
+
+            printk("Light: %d.%06d\n", light.val1, light.val2);
+            k_sleep(K_MSEC(2000));
         }
         // dk_set_led(RUN_STATUS_LED, (++blink_status) % 2);
 

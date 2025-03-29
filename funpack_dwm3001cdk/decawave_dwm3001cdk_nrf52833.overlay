@@ -41,6 +41,12 @@
 		com-invdir;
 		prechargep = <0x22>;
 	};
+
+	bh1750: bh1750@23 {
+		status = "okay";
+		compatible = "rohm,bh1750";
+		reg = <0x23>;
+	};
 };
 
 &pinctrl {
@@ -51,7 +57,7 @@
 		};
 	};
 };
-&spi3 { /* MOSI on  / P0.8 */
+&spi3 { /* MOSI on  / P0.27 */
 	compatible = "nordic,nrf-spim";
 	led_strip: ws2812@0 {
 		compatible = "worldsemi,ws2812-spi";
