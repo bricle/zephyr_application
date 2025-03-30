@@ -82,3 +82,30 @@ page {
   margin-left: 10px;
   font-weight: bold;
 }
+
+.text-display-panel {
+  margin-top: 30px;
+  padding: 15px;
+  background-color: #f8f8f8;
+  border-radius: 5px;
+}
+
+.text-input {
+  width: 100%;
+  height: 40px;
+  margin-bottom: 10px;
+  padding: 0 10px;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  box-sizing: border-box;
+}
+
+.send-button {
+  width: 100%;
+  background-color: #4CAF50;
+  color: white;
+}
+
+.send-button:active {
+  background-color: #45a049;
+}

@@ -47,6 +47,16 @@ module.exports.len = function(arr) {
       <text class="sensor-label">光照强度：</text>
       <text class="sensor-value">{{sensorValue}} LUX</text>
     </view>
+    
+    <!-- 添加LED点阵显示控制面板 -->
+    <view class="text-display-panel">
+      <input class="text-input" 
+             type="text" 
+             placeholder="输入要显示的文字" 
+             value="{{displayText}}"
+             bindinput="onTextInput"/>
+      <button class="send-button" bindtap="sendDisplayText">发送显示</button>
+    </view>
   </view>
 </view>
 

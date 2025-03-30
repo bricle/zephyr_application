@@ -85,7 +85,7 @@ void on_disconnected(struct bt_conn* conn, uint8_t reason) {
     dk_set_led_off(CONNECTION_STATUS_LED);
     if (default_conn) {
         bt_conn_unref(default_conn);
-        // default_conn = NULL;
+        default_conn = NULL;
     }
     LOG_INF("Disconnected (reason %u)\n", reason);
 }
@@ -135,7 +135,7 @@ struct bt_lbs_cb lbs_cb = {
     .button_read              = btn_cb,
     .led_strip_display_number = led_strip_display_number,
 };
-
+const struct device* display;
 int main(void) {
     int blink_status = 0;
     int err;
@@ -188,7 +188,6 @@ int main(void) {
 
     LOG_INF("Advertising successfully started\n");
 
-    const struct device* display;
     display = DEVICE_DT_GET(DT_CHOSEN(zephyr_display));
     if (display == NULL) {
         LOG_ERR("device pointer is NULL");
@@ -204,7 +203,6 @@ int main(void) {
         LOG_ERR("Framebuffer initialization failed");
         return -1;
     }
-    // cfb_set_kerning(display, 3);
     err = cfb_print(display, "hello world", 0, 0);
     if (err < 0) {
         LOG_ERR("cfb_print failed");
@@ -216,23 +214,11 @@ int main(void) {
         LOG_ERR("Framebuffer finalization failed");
         return -1;
     }
-    struct display_capabilities capabilities;
-    display_get_capabilities(display, &capabilities);
-
-    const uint16_t x_res = capabilities.x_resolution;
-    const uint16_t y_res = capabilities.y_resolution;
-
-    LOG_INF("x_resolution: %d", x_res);
-    LOG_INF("y_resolution: %d", y_res);
-    LOG_INF("supported pixel formats: %d", capabilities.supported_pixel_formats);
-    LOG_INF("screen_info: %d", capabilities.screen_info);
-    LOG_INF("current_pixel_format: %d", capabilities.current_pixel_format);
-    LOG_INF("current_orientation: %d", capabilities.current_orientation);
     led_strip_init();
-    led_strip_set_char_spacing(0);
+    led_strip_set_char_spacing(1);
     led_strip_scroll_text("Hello, world!", SCROLL_LEFT);
     for (;;) {
         led_strip_scroll_update();
-        k_msleep(250);
+        k_msleep(200);
     }
 }

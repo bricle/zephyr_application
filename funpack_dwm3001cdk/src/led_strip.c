@@ -20,16 +20,14 @@ LOG_MODULE_REGISTER(LED_STRIP, LOG_LEVEL_INF);
 #define NUM_PIXELS        (LED_MATRIX_SIZE * LED_MATRIX_SIZE)
 #define MAX_STRING_LENGTH 100
 
-// 滚动方向
-// typedef enum { SCROLL_LEFT, SCROLL_RIGHT } scroll_direction_t;
-
 // LED像素缓冲区
 static struct led_rgb pixels[STRIP_NUM_PIXELS];
 static const struct device* const strip = DEVICE_DT_GET(STRIP_NODE);
 
 // 滚动显示相关变量
-static uint8_t scroll_buffer[MAX_STRING_LENGTH * LED_MATRIX_SIZE][LED_MATRIX_SIZE];
+static uint8_t scroll_buffer[MAX_STRING_LENGTH * LED_MATRIX_SIZE * 2][LED_MATRIX_SIZE];
 static int scroll_buffer_width              = 0;
+static int original_width                   = 0;
 static int scroll_position                  = 0;
 static bool scroll_running                  = false;
 static scroll_direction_t current_direction = SCROLL_LEFT;
@@ -52,40 +50,74 @@ static void update_display() {
 }
 
 // 添加字符间距配置
-static uint8_t char_spacing = 1; // 默认间距为1个像素
+static uint8_t char_spacing = 2; // 默认间距为2个像素
 
 // 设置字符间距的函数
 void led_strip_set_char_spacing(uint8_t spacing) {
     char_spacing = spacing;
 }
 // 准备字符串的滚动缓冲区
+#define TEXT_GAP 4 // 两遍文本之间的间距
+
 static void prepare_scroll_buffer(const char* str) {
     int str_len = strlen(str);
     memset(scroll_buffer, 0, sizeof(scroll_buffer));
     scroll_buffer_width = 0;
+    original_width      = 0;
 
-    // 为每个字符创建点阵
+    // 第一遍复制
     for (int i = 0; i < str_len; i++) {
         char c = str[i];
-        // 确保字符在ASCII范围内
         if (c < 0 || c > 127) {
             continue;
         }
 
         uint8_t char_width = CHAR_WIDTHS[c];
 
-        // 复制字符的实际点阵到滚动缓冲区
-        for (int row = 0; row < 7; row++) {              // 只复制7行
-            for (int col = 0; col < char_width; col++) { // 只复制实际宽度
+        // 复制字符到缓冲区
+        for (int row = 0; row < 7; row++) {
+            for (int col = 0; col < char_width; col++) {
                 scroll_buffer[scroll_buffer_width + col][row + 1] = ASCII_CHARS[c][row][col];
-                // row + 1 使字符在8x8矩阵中垂直居中
             }
         }
         scroll_buffer_width += char_width;
 
-        // 在字符之间添加1像素的间距
+        // 在每个字符后添加间距
         if (i < str_len - 1) {
-            scroll_buffer_width += 1;
+            // 添加空白间距
+            for (int space = 0; space < char_spacing; space++) {
+                for (int row = 0; row < LED_MATRIX_SIZE; row++) {
+                    scroll_buffer[scroll_buffer_width + space][row] = 0;
+                }
+            }
+            scroll_buffer_width += char_spacing;
+        }
+    }
+
+    // 保存原始宽度（包括将要添加的间距）
+    original_width = scroll_buffer_width + TEXT_GAP;
+
+    // 添加文本间的间距
+    scroll_buffer_width += TEXT_GAP;
+
+    // 第二遍复制
+    for (int i = 0; i < str_len; i++) {
+        char c = str[i];
+        if (c < 0 || c > 127) {
+            continue;
+        }
+
+        uint8_t char_width = CHAR_WIDTHS[c];
+
+        for (int row = 0; row < 7; row++) {
+            for (int col = 0; col < char_width; col++) {
+                scroll_buffer[scroll_buffer_width + col][row + 1] = ASCII_CHARS[c][row][col];
+            }
+        }
+        scroll_buffer_width += char_width;
+
+        if (i < str_len - 1) {
+            scroll_buffer_width += char_spacing;
         }
     }
 }
@@ -98,7 +130,7 @@ void led_strip_scroll_text(const char* str, scroll_direction_t direction) {
 
     current_direction = direction;
     scroll_running    = true;
-    scroll_position   = (direction == SCROLL_LEFT) ? 0 : -scroll_buffer_width + LED_MATRIX_SIZE;
+    scroll_position   = 0; // 总是从0开始，因为我们有两份完整的文本
 
     prepare_scroll_buffer(str);
 }
@@ -131,13 +163,15 @@ void led_strip_scroll_update() {
     // 更新滚动位置
     if (current_direction == SCROLL_LEFT) {
         scroll_position++;
-        if (scroll_position >= scroll_buffer_width) {
-            scroll_position = 0; // 循环滚动
+        // 当第一遍文本滚动完成后，回到第二遍文本的开始位置
+        if (scroll_position >= original_width) {
+            scroll_position = 0;
         }
     } else {
         scroll_position--;
-        if (scroll_position <= -scroll_buffer_width) {
-            scroll_position = LED_MATRIX_SIZE - 1; // 循环滚动
+        // 当滚动到开始位置时，跳转到第一遍文本的末尾
+        if (scroll_position < 0) {
+            scroll_position = original_width - 1;
         }
     }
 }
@@ -160,7 +194,6 @@ int led_strip_init() {
     return 0;
 }
 
-// 保持向后兼容的数字显示功能
 void led_strip_display_number(uint8_t number) {
     if (number > 9) {
         return;

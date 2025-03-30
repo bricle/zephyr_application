@@ -12,15 +12,16 @@
 #include <zephyr/bluetooth/conn.h>
 #include <zephyr/bluetooth/uuid.h>
 #include <zephyr/bluetooth/gatt.h>
-
+#include <zephyr/drivers/display.h>
+#include <zephyr/display/cfb.h>
 #include "my_lbs.h"
-
+#include "led_strip.h"
 #include <zephyr/logging/log.h>
 
 LOG_MODULE_REGISTER(MY_LBS, LOG_LEVEL_DBG);
 
 static struct bt_lbs_cb lbs_cb;
-
+char uart_display_buffer[100];
 static ssize_t read_button(struct bt_conn* conn,
                            const struct bt_gatt_attr* attr,
                            void* buf,
@@ -74,6 +75,36 @@ static ssize_t strip_display_number(struct bt_conn* conn,
     }
     return len;
 };
+extern const struct device* display;
+static ssize_t on_receive(struct bt_conn* conn,
+                          const struct bt_gatt_attr* attr,
+                          const void* buf,
+                          uint16_t len,
+                          uint16_t offset,
+                          uint8_t flags) {
+    LOG_DBG("Received data, handle %d, conn %p", attr->handle, (void*)conn);
+    memcpy(uart_display_buffer, buf, len);
+    uart_display_buffer[len] = '\0'; // Null-terminate the string
+    LOG_DBG("Received data: %s", uart_display_buffer);
+    led_strip_scroll_text(uart_display_buffer, SCROLL_LEFT);
+    int err = 0;
+    cfb_framebuffer_clear(display, 0);
+    err = cfb_print(display, uart_display_buffer, 0, 0);
+    if (err < 0) {
+        LOG_ERR("cfb_print failed");
+        return -1;
+    }
+    err = cfb_framebuffer_invert(display);
+    err = cfb_framebuffer_finalize(display);
+    if (err < 0) {
+        LOG_ERR("Framebuffer finalization failed");
+        return -1;
+    }
+    // if (lbs_cb.received) {
+    //     lbs_cb.received(conn, buf, len);
+    // }
+    // return len;
+}
 bool indicate_enabled;
 bool notify_mysensor_enabled;
 static struct bt_gatt_indicate_params indi_params;
@@ -116,6 +147,12 @@ BT_GATT_SERVICE_DEFINE(my_lbs,
                                               BT_GATT_PERM_WRITE,
                                               NULL,
                                               strip_display_number,
+                                              NULL),
+                       BT_GATT_CHARACTERISTIC(BT_UUID_NUS_RX,
+                                              BT_GATT_CHRC_WRITE | BT_GATT_CHRC_WRITE_WITHOUT_RESP,
+                                              BT_GATT_PERM_READ | BT_GATT_PERM_WRITE,
+                                              NULL,
+                                              on_receive,
                                               NULL));
 
 void indi_cb(struct bt_conn* conn, struct bt_gatt_indicate_params* params, uint8_t err) {

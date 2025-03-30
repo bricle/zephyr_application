@@ -28,7 +28,9 @@ Page({
     connected: false,
     serviceId: '',
     characteristicId: '',
-    sensorValue: 0  // 添加传感器数值
+    sensorValue: 0,  // 添加传感器数值
+    displayText: '', // 添加显示文本状态
+    rxCharacteristicId: '' // 添加接收特征值ID
   },
 
   // 扫描并连接设备
@@ -128,6 +130,20 @@ Page({
                           fail: (error) => console.log('启用传感器通知失败:', error)
                         });
                       }
+                      // 添加对RX特征值的处理
+                      if (char.uuid.toLowerCase().includes('1537')) {
+                        console.log('找到RX特征值:', char.uuid);
+                        console.log('RX特征值完整属性:', char);
+                        // 检查写入权限
+                        if (char.properties.write || char.properties.writeWithoutResponse) {
+                          console.log('RX特征值具有写入权限');
+                          this.setData({
+                            rxCharacteristicId: char.uuid
+                          });
+                        } else {
+                          console.log('RX特征值不具备写入权限');
+                        }
+                      }
                     }
                   },
                   fail: (res) => console.log('获取特征值失败:', res)
@@ -197,5 +213,89 @@ Page({
     
     // 调用已有的连接方法
     this.connectDevice();
-  }
+  },
+
+  // 处理文本输入
+  onTextInput(e) {
+    this.setData({
+      displayText: e.detail.value
+    });
+  },
+
+  // 发送显示文本
+  sendDisplayText() {
+    if (!this.data.displayText) {
+      wx.showToast({
+        title: '请输入文字',
+        icon: 'none'
+      });
+      return;
+    }
+
+    if (!this.data.rxCharacteristicId) {
+      console.log('RX特征值未找到');
+      wx.showToast({
+        title: 'RX特征值未找到',
+        icon: 'none'
+      });
+      return;
+    }
+
+    console.log('准备发送文本:', this.data.displayText);
+    console.log('使用特征值:', this.data.rxCharacteristicId);
+    console.log('服务ID:', this.data.serviceId);
+    
+    const str = this.data.displayText;
+    const buffer = new ArrayBuffer(str.length + 1);
+    const dataView = new DataView(buffer);
+    
+    for (let i = 0; i < str.length; i++) {
+      dataView.setUint8(i, str.charCodeAt(i));
+    }
+    // 添加字符串结束符
+    dataView.setUint8(str.length, 0);
+    
+    console.log('编码后的数据:', new Uint8Array(buffer));
+
+    // 移除 writeType 参数，使用默认写入方式
+    wx.writeBLECharacteristicValue({
+      deviceId: this.data.deviceId,
+      serviceId: this.data.serviceId,
+      characteristicId: this.data.rxCharacteristicId,
+      value: buffer,
+      success: () => {
+        console.log('发送显示文本成功');
+        wx.showToast({
+          title: '发送成功',
+          icon: 'success'
+        });
+      },
+      fail: (res) => {
+        console.log('发送显示文本失败:', res);
+        // 直接重试发送
+        setTimeout(() => {
+          wx.writeBLECharacteristicValue({
+            deviceId: this.data.deviceId,
+            serviceId: this.data.serviceId,
+            characteristicId: this.data.rxCharacteristicId,
+            value: buffer,
+            success: () => {
+              console.log('重试发送成功');
+              wx.showToast({
+                title: '发送成功',
+                icon: 'success'
+              });
+            },
+            fail: (error) => {
+              console.log('重试发送也失败:', error);
+              // wx.showToast({
+              //   title: '发送失败，请重试',
+              //   icon: 'none'
+              // });
+            }
+          });
+        }, 200);
+      }
+    });
+  },
 })
