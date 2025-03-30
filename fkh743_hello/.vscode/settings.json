@@ -1,0 +1,10 @@
+{
+    "clangd.arguments": [
+        "--compile-commands-dir=${workspaceFolder}\\build\\fkh743_hello"
+    ],
+    "zephyr-ide.use-zephyr-ide-json": true,
+    "zephyr-ide.projects": null,
+    "devicetree.zephyr": "/home/shan/zephyr_ide_global_main/external/zephyr",
+    "kconfig.zephyr.base": "/home/shan/zephyr_ide_global_main/external/zephyr",
+    "terminal.integrated.defaultProfile.linux": "Zephyr IDE Terminal"
+}

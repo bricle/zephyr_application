@@ -4,6 +4,5 @@
     ],
     "zephyr-ide.use-zephyr-ide-json": true,
     "zephyr-ide.projects": null,
-    "devicetree.zephyr": "/home/shan/zephyr_ide_global_main/external/zephyr",
-    "kconfig.zephyr.base": "/home/shan/zephyr_ide_global_main/external/zephyr"
+
 }
