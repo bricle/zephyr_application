@@ -1,10 +1,18 @@
 {
     "clangd.arguments": [
-        "--compile-commands-dir=${workspaceFolder}\\build\\fkh743_hello"
+        "--compile-commands-dir=${workspaceFolder}/build",
+        "--compile_args_from=filesystem",
     ],
-    "zephyr-ide.use-zephyr-ide-json": true,
-    "zephyr-ide.projects": null,
-    "devicetree.zephyr": "/home/shan/zephyr_ide_global_main/external/zephyr",
-    "kconfig.zephyr.base": "/home/shan/zephyr_ide_global_main/external/zephyr",
-    "terminal.integrated.defaultProfile.linux": "Zephyr IDE Terminal"
+    
+    "files.associations": {
+        "*.md": "markdown",
+        "flash.h": "c",
+        "dma.h": "c"
+    },
+    "devicetree.zephyr": {
+        "$mid": 1,
+        "path": "/home/shan/ncs/v2.9.1/zephyr",
+        "scheme": "vscode-remote",
+        "authority": "wsl+ubt"
+    },
 }
