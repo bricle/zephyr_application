@@ -43,7 +43,7 @@
 			compatible = "goodix,gt911";
 			reg = <0x5d>;
 			// alt-addr = <0x14>;
-			// reset-gpios = <&gpioi 10 GPIO_ACTIVE_LOW>;
+			reset-gpios = <&gpioi 10 GPIO_ACTIVE_LOW>;
 			irq-gpios = <&gpioi 11 GPIO_ACTIVE_HIGH>;
 		};
 	};

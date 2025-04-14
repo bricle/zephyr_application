@@ -9,10 +9,5 @@
         "flash.h": "c",
         "dma.h": "c"
     },
-    "devicetree.zephyr": {
-        "$mid": 1,
-        "path": "/home/shan/ncs/v2.9.1/zephyr",
-        "scheme": "vscode-remote",
-        "authority": "wsl+ubt"
-    },
+    "cortex-debug.armToolchainPrefix": "arm-zephyr-eabi",
 }
