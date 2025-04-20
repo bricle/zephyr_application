@@ -1,0 +1,13 @@
+{
+    "clangd.arguments": [
+        "--compile-commands-dir=${workspaceFolder}/build",
+        "--compile_args_from=filesystem",
+    ],
+    
+    "files.associations": {
+        "*.md": "markdown",
+        "flash.h": "c",
+        "dma.h": "c"
+    },
+    "cortex-debug.armToolchainPrefix": "arm-zephyr-eabi",
+}
