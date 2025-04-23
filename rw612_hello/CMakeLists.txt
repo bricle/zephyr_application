@@ -5,3 +5,5 @@ find_package(Zephyr REQUIRED HINTS $ENV{ZEPHYR_BASE})
 project(semaphore)
 
 target_sources(app PRIVATE src/main.c)
+
+include(${ZEPHYR_BASE}/samples/net/common/common.cmake)
