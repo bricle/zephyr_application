@@ -5,10 +5,31 @@
 #include <zephyr/net/wifi_mgmt.h>
 #include <zephyr/logging/log.h>
 #include <zephyr/net/wifi_credentials.h>
+#include "arpa/inet.h"
+#include "netdb.h"
 #include "zephyr/kernel.h"
 #include "zephyr/net/net_if.h"
+#include "zephyr/net/net_ip.h"
 #include "zephyr/net/wifi.h"
 #include "zephyr/sys/time_units.h"
+
+#ifndef __ZEPHYR__
+
+#include <netinet/in.h>
+#include <sys/socket.h>
+#include <arpa/inet.h>
+#include <unistd.h>
+
+#else
+
+#include <zephyr/net/socket.h>
+
+#endif
+
+/************************for tcp echo server********************** */
+#define BIND_PORT 4242
+
+/************************for wifi connection********************** */
 LOG_MODULE_REGISTER(rw612_hello, LOG_LEVEL_INF);
 #define event_mask (NET_EVENT_L4_CONNECTED | NET_EVENT_L4_DISCONNECTED)
 static struct wifi_connect_req_params wifi_connect_params;
@@ -91,5 +112,54 @@ int main(void) {
     }
     k_sem_take(&run_app, K_FOREVER);
     LOG_INF("run_app started");
+
+    /*************************address convention*********************** */
+    struct sockaddr_in sa;   // IPv4
+    struct sockaddr_in6 sa6; // IPv6
+    char ip4_str[INET_ADDRSTRLEN];
+    char ip6_str[INET6_ADDRSTRLEN];
+
+    inet_pton(AF_INET, "10.12.110.57", &(sa.sin_addr));             // IPv4
+    inet_pton(AF_INET6, "2001:db8:63b3:1::3490", &(sa6.sin6_addr)); // IPv6
+    inet_ntop(AF_INET, &(sa.sin_addr), ip4_str, INET_ADDRSTRLEN);
+    inet_ntop(AF_INET6, &(sa6.sin6_addr), ip6_str, INET6_ADDRSTRLEN);
+    LOG_INF("IPv4 address: %s", ip4_str);
+    LOG_INF("IPv6 address: %s", ip6_str);
+
+    /*************************DNA resolve example*********************** */
+    {
+#define SERVER_HOSTNAME "www.baidu.com"
+#define SERVER_PORT     "https"
+        int ret;
+        struct addrinfo hints, *res;
+        memset(&hints, 0, sizeof(hints));
+        hints.ai_socktype = SOCK_STREAM;
+        hints.ai_family   = AF_INET; // AF_INET or AF_INET6
+        /**servname is bassicly the port number or type of protocal in string format */
+        ret = getaddrinfo(SERVER_HOSTNAME, NULL, &hints, &res);
+        if (ret != 0) {
+            LOG_ERR("getaddrinfo failed: %d", ret);
+            return ret;
+        }
+        struct addrinfo* p = res;
+        int dns_rse_inx    = 0;
+        while (p != NULL) {
+            LOG_INF("dns_rse_inx: %d", dns_rse_inx++);
+            char ip4str[INET_ADDRSTRLEN]  = {0};
+            char ip6str[INET6_ADDRSTRLEN] = {0};
+            if (p->ai_family == AF_INET) {
+                struct sockaddr_in* addr4 = (struct sockaddr_in*)p->ai_addr;
+                addr4->sin_family         = AF_INET;
+                inet_ntop(AF_INET, &(addr4->sin_addr), ip4str, INET_ADDRSTRLEN);
+                LOG_INF("IPv4 address: %s", ip4str);
+            }
+            if (p->ai_family == AF_INET6) {
+                struct sockaddr_in6* addr6 = (struct sockaddr_in6*)p->ai_addr;
+                inet_ntop(AF_INET6, &(addr6->sin6_addr), ip6str, INET6_ADDRSTRLEN);
+                LOG_INF("IPv6 address: %s", ip6str);
+            }
+            p = p->ai_next;
+        }
+    }
     return 0;
 }
