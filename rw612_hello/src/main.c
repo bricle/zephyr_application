@@ -1,5 +1,6 @@
 #include <stdbool.h>
 #include <stdio.h>
+#include <stdlib.h>
 #include <string.h>
 #include <zephyr/net/net_mgmt.h>
 #include <zephyr/net/wifi_mgmt.h>
@@ -7,6 +8,7 @@
 #include <zephyr/net/wifi_credentials.h>
 #include "arpa/inet.h"
 #include "netdb.h"
+#include "sys/socket.h"
 #include "zephyr/kernel.h"
 #include "zephyr/net/net_if.h"
 #include "zephyr/net/net_ip.h"
@@ -161,5 +163,82 @@ int main(void) {
             p = p->ai_next;
         }
     }
+
+    {
+        int server_fd, ret;
+        struct sockaddr_in addr = {
+            .sin_family = AF_INET,
+            .sin_port   = htons(4444),
+            .sin_addr   = INADDR_ANY_INIT,
+        };
+
+        // Add debug logging before socket operations
+        LOG_INF("Creating socket...");
+        server_fd = socket(AF_INET, SOCK_STREAM, 0);
+        if (server_fd < 0) {
+            LOG_ERR("socket failed");
+            return -1;
+        }
+        LOG_INF("Socket created: fd=%d", server_fd);
+
+        LOG_INF("Binding to port 4444...");
+        ret = bind(server_fd, (struct sockaddr*)&addr, sizeof(addr));
+        if (ret < 0) {
+            LOG_ERR("bind failed, errno: %d", errno);
+            close(server_fd);
+            return -1;
+        }
+        LOG_INF("Bind successful");
+
+        LOG_INF("Starting listen...");
+        ret = listen(server_fd, 5);
+        if (ret < 0) {
+            LOG_ERR("listen failed, errno: %d", errno);
+            close(server_fd);
+            return -1;
+        }
+        LOG_INF("Listen started, waiting for connections...");
+
+        while (1) {
+            int client_fd;
+            struct sockaddr_in client_addr;
+            socklen_t client_addr_len = sizeof(client_addr);
+
+            LOG_INF("Waiting in accept()..."); // we're blocking
+            client_fd = accept(server_fd, (struct sockaddr*)&client_addr, &client_addr_len);
+            LOG_INF("accept() returned: fd=%d", client_fd); // see all accept results
+
+            if (client_fd < 0) {
+                LOG_ERR("accept failed, errno: %d", errno);
+                continue;
+            }
+
+            char addr_str[32];
+            inet_ntop(AF_INET, &client_addr.sin_addr, addr_str, sizeof(addr_str));
+            LOG_INF("client connected: %s:%d", addr_str, ntohs(client_addr.sin_port));
+            while (1) {
+                char recv_buf[128];
+                // receive most max_len bytes, if client sent more than max_len bytes, we will receive them in next recv call
+                int recv_len = recv(client_fd, recv_buf, sizeof(recv_buf) - 1, 0);
+                LOG_INF("received %d bytes", recv_len);
+                if (recv_len <= 0) {
+                    if (recv_len < 0) {
+                        LOG_ERR("recv failed, errno: %d", errno);
+                    }
+                    close(client_fd);
+                    LOG_INF("client disconnected");
+                    break;
+                }
+                int send_len;
+                int rest_to_send = recv_len;
+                while (rest_to_send > 0) {
+                    send_len = send(client_fd, recv_buf, rest_to_send, 0);
+                    rest_to_send -= send_len;
+                    LOG_INF("sent %d bytes", send_len);
+                }
+            }
+        }
+    }
+
     return 0;
 }
