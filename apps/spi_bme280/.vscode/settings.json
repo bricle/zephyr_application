@@ -1,0 +1,6 @@
+{
+    "clangd.arguments": [
+        "--compile-commands-dir=${workspaceFolder}/build/spi_bme280",
+        "--compile_args_from=filesystem",
+    ]
+}

@@ -1,0 +1,8 @@
+{
+    "clangd.arguments": [
+        "--compile-commands-dir=${workspaceFolder}\\build\\frdm_rw612"
+    ],
+    "zephyr-ide.use-zephyr-ide-json": true,
+    "zephyr-ide.projects": null,
+
+}

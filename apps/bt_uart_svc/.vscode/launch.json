@@ -1,0 +1,12 @@
+{
+	"version": "0.2.0",
+	"configurations": [
+		{
+			"type": "nrf-connect",
+			"request": "launch",
+			"name": "Launch bt_uart_svc",
+			"config": "${workspaceFolder}/build/bt_uart_svc",
+			"runToEntryPoint": "main"
+		}
+	]
+}

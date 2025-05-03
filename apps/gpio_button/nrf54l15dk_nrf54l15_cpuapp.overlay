@@ -1,0 +1,39 @@
+// To get started, press Ctrl+Space to bring up the completion menu and view the available nodes.
+
+// You can also use the buttons in the sidebar to perform actions on nodes.
+// Actions currently available include:
+
+// * Enabling / disabling the node
+// * Adding the bus to a bus
+// * Removing the node
+// * Connecting ADC channels
+
+// For more help, browse the DeviceTree documentation at https://docs.zephyrproject.org/latest/guides/dts/index.html
+// You can also visit the nRF DeviceTree extension documentation at https://docs.nordicsemi.com/bundle/nrf-connect-vscode/page/guides/ncs_configure_app.html#devicetree-support-in-the-extension
+
+
+/delete-node/ &led2;
+/delete-node/ &led3;
+
+
+&led0 {
+	gpios = <&gpio2 7 GPIO_ACTIVE_HIGH>;
+};
+
+&led1 {
+	gpios = <&gpio1 14 GPIO_ACTIVE_HIGH>;
+};
+
+
+/ {
+	aliases {
+		/delete-property/ led2;
+		/delete-property/ led3;
+	};
+
+	zephyr,user {
+		// gpios suffix is crucial for the device tree compiler to recognize the property
+		test-gnss-reset-pin-gpios = <&gpio2 9 GPIO_ACTIVE_LOW>;
+		test-modem-pwron-pin-gpios = <&gpio1 10 GPIO_ACTIVE_LOW>;
+	};
+};

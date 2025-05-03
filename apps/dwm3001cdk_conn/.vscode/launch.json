@@ -1,0 +1,12 @@
+{
+	"version": "0.2.0",
+	"configurations": [
+		{
+			"type": "nrf-connect",
+			"request": "launch",
+			"name": "Launch dwm3001cdk_ble",
+			"config": "${workspaceFolder}/build/dwm3001cdk_conn",
+			"runToEntryPoint": "main"
+		}
+	]
+}

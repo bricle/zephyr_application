@@ -1,0 +1,4 @@
+CompileFlags:
+    Add:
+        - -Ibuild/zephyr/include/generated/zephyr 
+        - -Ibuild/zephyr/include/generated/zephyr/syscalls 

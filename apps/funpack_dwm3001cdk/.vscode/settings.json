@@ -1,0 +1,8 @@
+{
+    "clangd.arguments": [
+        "--compile-commands-dir=${workspaceFolder}/build/funpack_dwm3001cdk"
+    ],
+    "nrf-connect.debugging.bindings": {
+        "${workspaceFolder}/build/funpack_dwm3001cdk": "Launch funpack_dwm3001cdk"
+    }
+}

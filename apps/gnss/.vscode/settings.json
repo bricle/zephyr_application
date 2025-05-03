@@ -1,0 +1,6 @@
+{
+    "clangd.arguments": [
+        "--compile-commands-dir=${workspaceFolder}\\build\\gnss"
+    ],
+    "idf.pythonInstallPath": "D:\\program\\.espressif\\tools\\idf-python\\3.11.2\\python.exe"
+}

@@ -1,0 +1,12 @@
+{
+	"version": "0.2.0",
+	"configurations": [
+		{
+			"type": "nrf-connect",
+			"request": "launch",
+			"name": "Launch funpack_dwm3001cdk",
+			"config": "${workspaceFolder}/build/funpack_dwm3001cdk",
+			"runToEntryPoint": "main"
+		}
+	]
+}

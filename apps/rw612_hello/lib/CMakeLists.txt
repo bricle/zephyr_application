@@ -1,0 +1,2 @@
+add_subdirectory_ifdef(CONFIG_MQTT_HELPER mqtt_helper)
+zephyr_include_directories(include)

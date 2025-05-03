@@ -1,0 +1,9 @@
+{
+    "clangd.arguments": [
+        "--compile-commands-dir=${workspaceFolder}/build/dwm3001cdk_conn_data_ex"
+    ],
+    "nrf-connect.debugging.bindings": {
+        "${workspaceFolder}/build/dwm3001cdk_ble": "Launch dwm3001cdk_conn_data_ex",
+        "${workspaceFolder}/build/dwm3001cdk_conn_data_ex": "Launch dwm3001cdk_conn_data_ex"
+    }
+}
