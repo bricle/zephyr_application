@@ -4,6 +4,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
+#include <stdint.h>
 #include <zephyr/device.h>
 #include <zephyr/kernel.h>
 #include <zephyr/net/socket.h>
@@ -14,13 +15,15 @@
 #include <string.h>
 
 #include <zephyr/drivers/cellular.h>
+#include "arpa/inet.h"
+#include "zephyr/net/net_ip.h"
 
-#define SAMPLE_TEST_ENDPOINT_HOSTNAME         ("udp-echo.nordicsemi.academy")
-#define SAMPLE_TEST_ENDPOINT_UDP_ECHO_PORT    (7780)
-#define SAMPLE_TEST_ENDPOINT_UDP_RECEIVE_PORT (7781)
+#define SAMPLE_TEST_ENDPOINT_HOSTNAME         ("www.baidu.com")
+#define SAMPLE_TEST_ENDPOINT_UDP_ECHO_PORT    (43603)
+#define SAMPLE_TEST_ENDPOINT_UDP_RECEIVE_PORT (43603)
 #define SAMPLE_TEST_PACKET_SIZE               (1024)
 #define SAMPLE_TEST_ECHO_PACKETS              (16)
-#define SAMPLE_TEST_TRANSMIT_PACKETS          (128)
+#define SAMPLE_TEST_TRANSMIT_PACKETS          (8)
 
 const struct device* modem = DEVICE_DT_GET(DT_ALIAS(modem));
 
@@ -322,12 +325,20 @@ int main(void) {
 
     printk("Performing DNS lookup of %s\n", SAMPLE_TEST_ENDPOINT_HOSTNAME);
     ret = sample_dns_request();
+    // resolve www.baidu.com would success, but cannot send udp packet to www.baidu.com
     if (ret < 0) {
         printk("DNS query failed\n");
         return -1;
     }
 
     {
+        char* ip_echo                                        = "112.125.89.8";
+        uint16_t ip_echo_port                                = 43603;
+        net_sin(&sample_test_dns_addrinfo.ai_addr)->sin_port = htons(ip_echo_port);
+        inet_pton(sample_test_dns_addrinfo.ai_addr.sa_family,
+                  ip_echo,
+                  &net_sin(&sample_test_dns_addrinfo.ai_addr)->sin_addr);
+        sample_test_dns_addrinfo.ai_addrlen = sizeof(struct sockaddr_in);
         char ip_str[INET6_ADDRSTRLEN];
         const void* src;
 
@@ -344,6 +355,7 @@ int main(void) {
         }
         inet_ntop(sample_test_dns_addrinfo.ai_addr.sa_family, src, ip_str, sizeof(ip_str));
         printk("Resolved to %s\n", ip_str);
+        printk("Port %d\n", ntohs(*port));
     }
 
     ret = sample_echo_packet(&sample_test_dns_addrinfo.ai_addr,

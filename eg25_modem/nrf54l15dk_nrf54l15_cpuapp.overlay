@@ -38,6 +38,7 @@
 
 &uart22 {
 	current-speed = <115200>;
+	// current-speed = <921600>;
 	status = "okay";
 	pinctrl-0 = <&uart22_default>;
 	pinctrl-1 = <&uart22_sleep>;

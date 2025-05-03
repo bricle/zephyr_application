@@ -1,6 +1,6 @@
 {
     "clangd.arguments": [
-        "--compile-commands-dir=${workspaceFolder}/build/bg25_modem",
+        "--compile-commands-dir=${workspaceFolder}/build",
         "--compile_args_from=filesystem",
     ]
 }
