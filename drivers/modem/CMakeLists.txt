@@ -1,0 +1,4 @@
+
+
+zephyr_library()
+zephyr_library_sources_ifdef(CONFIG_MODEM_ZEPHYR_MODEM_UART zephyr_modem_uart.c)
