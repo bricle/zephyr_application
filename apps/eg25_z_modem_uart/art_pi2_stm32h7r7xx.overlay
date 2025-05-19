@@ -1,0 +1,18 @@
+/ {
+	aliases {
+			modem = &modem;
+	};
+};
+
+&usart1 {
+	pinctrl-0 = <&usart1_tx_pf13 &usart1_rx_pf12>;
+	pinctrl-names = "default";
+	current-speed = <115200>;
+	status = "okay";
+    	modem: modem {
+		compatible = "zephyr,modem-uart";
+		mdm-reset-gpios = <&gpioa 2 GPIO_ACTIVE_LOW>;
+		// mdm-startup-time-ms = <1000>;
+		status = "okay";
+	};
+};

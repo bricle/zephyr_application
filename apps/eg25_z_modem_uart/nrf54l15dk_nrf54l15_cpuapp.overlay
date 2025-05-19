@@ -46,6 +46,7 @@
 	modem: modem {
 		compatible = "zephyr,modem-uart";
 		mdm-reset-gpios = <&gpio1 11 GPIO_ACTIVE_LOW>;
+		// mdm-startup-time-ms = <1000>;
 		status = "okay";
 	};
 };
