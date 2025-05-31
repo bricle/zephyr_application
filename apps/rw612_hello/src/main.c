@@ -128,7 +128,7 @@ int main(void) {
     LOG_INF("IPv4 address: %s", ip4_str);
     LOG_INF("IPv6 address: %s", ip6_str);
 
-    /*************************DNA resolve example*********************** */
+    /*************************DNS resolve example*********************** */
     {
 #define SERVER_HOSTNAME "www.baidu.com"
 #define SERVER_PORT     "https"
@@ -153,17 +153,17 @@ int main(void) {
                 struct sockaddr_in* addr4 = (struct sockaddr_in*)p->ai_addr;
                 addr4->sin_family         = AF_INET;
                 inet_ntop(AF_INET, &(addr4->sin_addr), ip4str, INET_ADDRSTRLEN);
-                LOG_INF("IPv4 address: %s", ip4str);
+                LOG_INF("The IPv4 address of domain %s: %s", SERVER_HOSTNAME, ip4str);
             }
             if (p->ai_family == AF_INET6) {
                 struct sockaddr_in6* addr6 = (struct sockaddr_in6*)p->ai_addr;
                 inet_ntop(AF_INET6, &(addr6->sin6_addr), ip6str, INET6_ADDRSTRLEN);
-                LOG_INF("IPv6 address: %s", ip6str);
+                LOG_INF("The IPv4 address of domain %s: %s", SERVER_HOSTNAME, ip6str);
             }
             p = p->ai_next;
         }
     }
-
+    /*************************socket tcp server example*********************** */
     {
         int server_fd, ret;
         struct sockaddr_in addr = {
@@ -204,7 +204,8 @@ int main(void) {
             struct sockaddr_in client_addr;
             socklen_t client_addr_len = sizeof(client_addr);
 
-            LOG_INF("Waiting in accept()..."); // we're blocking
+            LOG_INF("Waiting in accept()...");
+            // we're blocked here until a client connects
             client_fd = accept(server_fd, (struct sockaddr*)&client_addr, &client_addr_len);
             LOG_INF("accept() returned: fd=%d", client_fd); // see all accept results
 
@@ -224,9 +225,13 @@ int main(void) {
                 if (recv_len <= 0) {
                     if (recv_len < 0) {
                         LOG_ERR("recv failed, errno: %d", errno);
+                    } else {
+                        // recv_len == 0 means client disconnected
+                        LOG_INF("client disconnected");
                     }
+                    // break out of the while loop to accept a new client
                     close(client_fd);
-                    LOG_INF("client disconnected");
+                    LOG_INF("closed client socket: fd=%d", client_fd);
                     break;
                 }
                 int send_len;
