@@ -30,3 +30,4 @@ manifest:
           - fatfs
           - lvgl
           - hal_nxp
+          - hal_infineon
