@@ -1,0 +1,6 @@
+{
+    "nrf-connect.applications": [
+        "${workspaceFolder}/state_machine",
+        "${workspaceFolder}/eg25_modem"
+    ]
+}
