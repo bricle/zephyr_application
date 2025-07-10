@@ -1,0 +1,6 @@
+board:
+  name: fk750m6_xih6
+  full_name: FK750M6-XIH6
+  vendor: fanke
+  socs:
+    - name: stm32h743xx

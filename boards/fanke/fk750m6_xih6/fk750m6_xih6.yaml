@@ -1,0 +1,17 @@
+identifier: fk750m6_xih6
+name: FANKE FK750M6-XIH6
+type: mcu
+arch: arm
+toolchain:
+  - zephyr
+  - gnuarmemb
+ram: 1024
+flash: 2048
+supported:
+  - uart
+  - gpio
+  - spi
+  - backup_sram
+  - qspi
+  - memc
+vendor: fanke
