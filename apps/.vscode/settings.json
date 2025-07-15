@@ -1,6 +1,7 @@
 {
     "nrf-connect.applications": [
         "${workspaceFolder}/state_machine",
-        "${workspaceFolder}/eg25_modem"
+        "${workspaceFolder}/eg25_modem",
+        "${workspaceFolder}/with_mcuboot"
     ]
 }
