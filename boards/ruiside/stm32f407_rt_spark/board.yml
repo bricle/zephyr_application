@@ -1,0 +1,6 @@
+board:
+  name: stm32f407_rt_spark
+  full_name: STM32F407 RT SPARK
+  vendor: ruiside
+  socs:
+    - name: stm32f407xx

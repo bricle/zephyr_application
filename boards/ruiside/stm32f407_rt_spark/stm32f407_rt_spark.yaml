@@ -1,0 +1,13 @@
+identifier: stm32f407_rt_spark
+name: STM32F407 RT SPARK
+type: mcu
+arch: arm
+toolchain:
+  - zephyr
+  - gnuarmemb
+ram: 192
+flash: 1024
+supported:
+  - gpio
+  - uart
+vendor: ruiside

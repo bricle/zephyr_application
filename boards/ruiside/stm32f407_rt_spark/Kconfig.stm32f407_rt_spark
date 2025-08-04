@@ -1,0 +1,5 @@
+# Copyright The Zephyr Project Contributors
+# SPDX-License-Identifier: Apache-2.0
+
+config BOARD_STM32F407_RT_SPARK
+	select SOC_STM32F407XG
