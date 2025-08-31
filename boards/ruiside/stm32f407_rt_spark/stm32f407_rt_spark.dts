@@ -61,7 +61,7 @@
 		led0 = &red_led;
 		led1 = &blue_led;
 		sw0 = &user_button_UP;
-		sdhc0 = &sdmmc1;
+		sdhc0 = &sdhc;
 	};
 };
 
@@ -140,21 +140,47 @@ zephyr_udc0: &usbotg_fs {
 	status = "okay";
 };
 
-&sdmmc1 {
-	status = "okay";
+// &sdmmc1 {
+// 	status = "okay";
+// 	pinctrl-0 = <&sdio_d0_pc8 &sdio_d1_pc9
+// 		     &sdio_d2_pc10 &sdio_d3_pc11
+// 		     &sdio_ck_pc12 &sdio_cmd_pd2>;
+// 	pinctrl-names = "default";
+// 	clk-bypass;
+// 	// clk-div = <6>;
+// 	bus-width = <4>;
+// 	cd-gpios = <&gpiof 3 (GPIO_ACTIVE_LOW)>;
+// 	dmas = <&dma2 6 4 (STM32_DMA_PERIPH_TX | STM32_DMA_PRIORITY_HIGH) STM32_DMA_FIFO_FULL>,
+// 	       <&dma2 3 4 (STM32_DMA_PERIPH_RX | STM32_DMA_PRIORITY_HIGH) STM32_DMA_FIFO_FULL>;
+// 	dma-names = "tx", "rx";
+// 	disk-name = "SD";
+// };
+sdhc: &sdmmc1 {
+	compatible = "st,stm32-sdio";
 	pinctrl-0 = <&sdio_d0_pc8 &sdio_d1_pc9
 		     &sdio_d2_pc10 &sdio_d3_pc11
 		     &sdio_ck_pc12 &sdio_cmd_pd2>;
 	pinctrl-names = "default";
-	clk-div = <1>;
-	bus-width = <1>;
-	cd-gpios = <&gpiof 3 (GPIO_ACTIVE_LOW)>;
-	dmas = <&dma2 6 4 (STM32_DMA_PERIPH_TX | STM32_DMA_PRIORITY_HIGH) STM32_DMA_FIFO_FULL>,
-	       <&dma2 3 4 (STM32_DMA_PERIPH_RX | STM32_DMA_PRIORITY_HIGH) STM32_DMA_FIFO_FULL>;
-	dma-names = "tx", "rx";
-	disk-name = "SD";
-};
+	// sdhi-on-gpios = <&gpioj 1 GPIO_ACTIVE_HIGH>;
+	reg = <0x40012c00 0x400>;
+	clocks = <&rcc STM32_CLOCK(APB2, 11U)>,
+			<&rcc STM32_SRC_PLL_Q NO_SEL>;
+	resets = <&rctl STM32_RESET(APB2, 11U)>;
+	interrupts = <49 0>;
+	min-bus-freq = <DT_FREQ_K(400)>;
+	max-bus-freq = <DT_FREQ_M(48)>;
+	clk-div = <46>;
+	// cd-gpios = <&gpiod 4 (GPIO_ACTIVE_HIGH | GPIO_PULL_UP)>;
+	// hw-flow-control;
+	bus-width = <4>;
+	status = "okay";
+	// sdmmc {
+	// 	compatible = "zephyr,sdmmc-disk";
+	// 	disk-name = "SD";
+	// 	status = "okay";
+	// };
 
+};
 &dma2 {
 	status = "okay";
 };
