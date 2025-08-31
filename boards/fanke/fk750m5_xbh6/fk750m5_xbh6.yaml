@@ -1,0 +1,17 @@
+identifier: fk750m5_xbh6
+name: FANKE FK750M5-XBH6
+type: mcu
+arch: arm
+toolchain:
+  - zephyr
+  - gnuarmemb
+ram: 1024
+flash: 128
+supported:
+  - uart
+  - gpio
+  - spi
+  - backup_sram
+  - qspi
+  - memc
+vendor: fanke

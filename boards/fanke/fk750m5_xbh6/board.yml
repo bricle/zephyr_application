@@ -1,0 +1,6 @@
+board:
+  name: fk750m5_xbh6
+  full_name: FK750M5-XBH6
+  vendor: fanke
+  socs:
+    - name: stm32h750xx
