@@ -26,8 +26,12 @@ manifest:
           - segger
           - mcuboot
           - mbedtls
+          - tf-psa-crypto
+          - net-tools
+          - mldsa-native
           - littlefs
           - fatfs
           - lvgl
           - hal_nxp
           - hal_infineon
+          - zcbor
