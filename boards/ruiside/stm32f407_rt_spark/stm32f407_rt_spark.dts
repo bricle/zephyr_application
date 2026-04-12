@@ -16,44 +16,52 @@
 	chosen {
 		zephyr,console = &usart1;
 		zephyr,shell-uart = &usart1;
+		zephyr,uart-mcumgr = &usart1;
 		zephyr,sram = &sram0;
 		zephyr,flash = &flash0;
 		zephyr,ccm = &ccm0;
+		zephyr,code-partition = &slot0_partition;
 	};
 
 	leds {
 		compatible = "gpio-leds";
 
-		red_led: led_1 {
+		red_led: led_red {
 			gpios = <&gpiof 12 GPIO_ACTIVE_LOW>;
-			label = "User LD1";
+			label = "User LED1";
 		};
 
-		blue_led: led_2 {
+		blue_led: led_blue {
 			gpios = <&gpiof 11 GPIO_ACTIVE_LOW>;
-			label = "User LD2";
+			label = "User LED2";
 		};
 	};
 
 	gpio_keys {
 		compatible = "gpio-keys";
 
-		user_button_0: K0 {
-			label = "Key K0";
-			gpios = <&gpiob 9 GPIO_ACTIVE_LOW>;
-			zephyr,code = <INPUT_KEY_0>;
-		};
-
-		user_button_1: K1 {
-			label = "Key K1";
-			gpios = <&gpiob 8 GPIO_ACTIVE_LOW>;
-			zephyr,code = <INPUT_KEY_1>;
-		};
-
 		user_button_UP: K_UP {
-			label = "Key WK_UP";
-			gpios = <&gpioa 0 GPIO_ACTIVE_HIGH>;
+			label = "Key K_UP";
+			gpios = <&gpioc 5 (GPIO_ACTIVE_LOW | GPIO_PULL_UP)>;
 			zephyr,code = <INPUT_KEY_UP>;
+		};
+
+		user_button_DOWN: K_DOWN {
+			label = "Key K_DOWN";
+			gpios = <&gpioc 1 (GPIO_ACTIVE_LOW | GPIO_PULL_UP)>;
+			zephyr,code = <INPUT_KEY_DOWN>;
+		};
+
+		user_button_LEFT: K_LEFT {
+			label = "Key K_LEFT";
+			gpios = <&gpioc 0 (GPIO_ACTIVE_LOW | GPIO_PULL_UP)>;
+			zephyr,code = <INPUT_KEY_LEFT>;
+		};
+
+		user_button_RIGHT: K_RIGHT {
+			label = "Key K_RIGHT";
+			gpios = <&gpioc 4 (GPIO_ACTIVE_LOW | GPIO_PULL_UP)>;
+			zephyr,code = <INPUT_KEY_RIGHT>;
 		};
 	};
 
@@ -65,9 +73,9 @@
 	};
 };
 
-&clk_lsi {
-	status = "okay";
-};
+// &clk_lsi {
+// 	status = "okay";
+// };
 
 &clk_hse {
 	clock-frequency = <DT_FREQ_M(8)>;
@@ -182,7 +190,7 @@ sdhc: &sdmmc1 {
 
 };
 &dma2 {
-	status = "okay";
+	// status = "okay";
 };
 
 &spi2 {
@@ -205,10 +213,61 @@ sdhc: &sdmmc1 {
 			compatible = "fixed-partitions";
 			#address-cells = <1>;
 			#size-cells = <1>;
-			storage_partition: partition@0 {
+			storage0_partition: partition@0 {
 				label = "storage";
 				reg = <0x00000000 DT_SIZE_M(8)>;
 			};
 		};
+	};
+};
+
+&flash0 {
+	partitions {
+		compatible = "fixed-partitions";
+		#address-cells = <1>;
+		#size-cells = <1>;
+
+		/* 64KB for bootloader */
+		boot_partition: partition@0 {
+			label = "mcuboot";
+			reg = <0x00000000 DT_SIZE_K(128)>;
+			read-only;
+		};
+
+		/*
+		 * nvs subsystem requires 2 sectors with a max total of 32K
+		 * On F4 series, the only option is to use the following
+		 * partition, which is compatible with mcuboot usage.
+		 * Keep it commented in order it is not used by CI.
+		 *
+		 * storage_partition: partition@8000 {
+		 *	label = "storage";
+		 *	reg = <0x0008000 DT_SIZE_K(32)>;
+		 * };
+		 */
+
+		/* application image slot: 256KB */
+		// stm32f407的flah的sector划分是不连续的，所以这里起始位置是0x20000，而不是0x10000
+		slot0_partition: partition@20000 {
+			label = "image-0";
+			reg = <0x00020000 DT_SIZE_K(256)>;
+		};
+
+		/* backup slot: 256KB */
+		slot1_partition: partition@60000 {
+			label = "image-1";
+			reg = <0x00060000 DT_SIZE_K(256)>;
+		};
+
+		/* swap slot: 128KB */
+		storage_partition: partition@a0000 {
+			label = "image-scratch";
+			reg = <0x000a0000 DT_SIZE_K(128)>;
+		};
+		/* swap slot: 160KB */
+		// scratch_partition: partition@a0000 {
+		// 	label = "image-scratch";
+		// 	reg = <0x000d8000 DT_SIZE_K(160)>;
+		// };
 	};
 };
