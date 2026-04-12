@@ -35,3 +35,4 @@ manifest:
           - hal_nxp
           - hal_infineon
           - zcbor
+          - hal_sifli

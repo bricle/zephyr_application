@@ -1,0 +1,19 @@
+# SPDX-FileCopyrightText: Copyright The Zephyr Project Contributors
+# SPDX-License-Identifier: Apache-2.0
+
+identifier: huangshan_pi_sf32lb52_ulp
+name: HuangShan PI SF32LB52-ULP
+type: mcu
+arch: arm
+ram: 512
+flash: 16320
+toolchain:
+  - zephyr
+supported:
+  - uart
+  - gpio
+  - watchdog
+  - bluetooth
+  - audio
+  - rtc
+vendor: jlc

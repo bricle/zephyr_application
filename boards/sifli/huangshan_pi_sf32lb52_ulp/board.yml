@@ -1,0 +1,9 @@
+# SPDX-FileCopyrightText: Copyright The Zephyr Project Contributors
+# SPDX-License-Identifier: Apache-2.0
+
+board:
+  name: huangshan_pi_sf32lb52_ulp
+  full_name: HuangShan PI SF32LB52-ULP
+  vendor: sifli
+  socs:
+    - name: sf32lb525uc6
