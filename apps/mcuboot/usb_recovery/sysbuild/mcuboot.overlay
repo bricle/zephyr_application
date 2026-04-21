@@ -1,0 +1,19 @@
+
+/* STEP 3.4 - Configure button and LED for Serial Recovery */
+/ {
+	// for frdm_mcxn947
+//   aliases {
+// 		mcuboot-button0 = &user_button_2;
+// 		mcuboot-led0 = &green_led;
+//   };
+
+// for spark stm32f407
+    aliases {
+		mcuboot-button0 = &user_button_UP;
+		mcuboot-led0 = &red_led;
+  };
+  	chosen {
+		// 对于自定义板子，需要修改这里的code-partition，指向bootloader所在的分区
+		zephyr,code-partition = &boot_partition;
+	};
+};

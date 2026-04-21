@@ -1,0 +1,6 @@
+{
+    "logscope.parser": "zephyr",
+    "logscope.uart.lastPort": "/dev/ttyUSB0",
+    "logscope.transport": "uart",
+    "logscope.logWrap": true
+}
