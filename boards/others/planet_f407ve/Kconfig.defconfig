@@ -1,0 +1,15 @@
+# black_f407ve board configuration
+
+# Copyright (c) 2020 Intel Corporation
+# SPDX-License-Identifier: Apache-2.0
+
+if BOARD_PLANET_F407VE
+
+configdefault NET_L2_ETHERNET
+	default y
+
+config SPI_STM32_INTERRUPT
+	default y
+	depends on SPI
+
+endif # BOARD_PLANET_F407VE

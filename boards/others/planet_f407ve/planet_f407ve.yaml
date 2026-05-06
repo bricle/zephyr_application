@@ -1,0 +1,15 @@
+identifier: planet_f407ve
+name: Planet STM32 F407VE Development Board
+type: mcu
+arch: arm
+toolchain:
+  - zephyr
+  - gnuarmemb
+ram: 192
+flash: 512
+supported:
+  - can
+  - pwm
+  - counter
+  - spi
+  - gpio
