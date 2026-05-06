@@ -1,0 +1,15 @@
+identifier: boring_f411ce
+name: Boring F411CE
+type: mcu
+arch: arm
+toolchain:
+  - zephyr
+  - gnuarmemb
+supported:
+  - counter
+  - spi
+  - i2c
+  - uart
+  - pwm
+  - adc
+vendor: boring

@@ -1,0 +1,269 @@
+/*
+ * Copyright (c) 2020 Brian Bradley <brian.bradley.p@gmail.com>
+ * Copyright (c) 2021 Kalyan Sriram <coder.kalyan@gmail.com>
+ *
+ * SPDX-License-Identifier: Apache-2.0
+ */
+
+/dts-v1/;
+#include <st/f4/stm32f411Xe.dtsi>
+#include <st/f4/stm32f411c(c-e)ux-pinctrl.dtsi>
+#include <zephyr/dt-bindings/input/input-event-codes.h>
+#include <zephyr/dt-bindings/mipi_dbi/mipi_dbi.h>
+#include <zephyr/dt-bindings/display/panel.h>
+
+/ {
+	model = "Boring F411CE";
+	compatible = "boring,boring_f411ce";
+
+	chosen {
+		// zephyr,console = &usart1;
+		// zephyr,shell-uart = &usart1;
+		zephyr,console = &cdc_acm_uart0;
+		zephyr,shell-uart = &cdc_acm_uart0;
+		zephyr,sram = &sram0;
+		zephyr,flash = &flash0;
+		zephyr,display = &st7789v_240x240;
+		zephyr,code-partition = &slot0_partition;
+	};
+
+	leds {
+		compatible = "gpio-leds";
+		user_led: led {
+			gpios = <&gpioa 0 GPIO_ACTIVE_LOW>;
+			label = "User LED";
+		};
+
+		lcd_bl: led_backlight {
+			gpios = <&gpiob 7 GPIO_ACTIVE_HIGH>;
+			label = "Backlight";
+		};
+	};
+
+	gpio_keys {
+		compatible = "gpio-keys";
+		user_button: button {
+			label = "KEY";
+			gpios = <&gpioc 13 (GPIO_ACTIVE_LOW | GPIO_PULL_UP)>;
+			zephyr,code = <INPUT_KEY_0>;
+		};
+	};
+
+	aliases {
+		led0 = &user_led;
+		sw0 = &user_button;
+		volt-sensor0 = &vref;
+		volt-sensor1 = &vbat;
+		backlight = &lcd_bl;
+	};
+
+	mipi_dbi_st7789v_240x240 {
+		compatible = "zephyr,mipi-dbi-spi";
+		spi-dev = <&spi3>;
+		dc-gpios = <&gpiob 4 GPIO_ACTIVE_HIGH>;
+		reset-gpios = <&gpiob 6 GPIO_ACTIVE_LOW>;
+		write-only;
+		#address-cells = <1>;
+		#size-cells = <0>;
+
+		st7789v_240x240: st7789v@0 {
+			compatible = "sitronix,st7789v";
+			reg = <0>;
+			mipi-max-frequency = <20000000>;
+
+			width = <240>;
+			height = <135>;
+			x-offset = <40>;
+			y-offset = <53>;
+
+			vcom = <0x19>;
+			gctrl = <0x35>;
+			vrhs = <0x12>;
+			vdvs = <0x20>;
+			mdac = <0x77>;
+			gamma = <0x00>;
+			// colmod = <0x05>;
+			pixel-format = <PANEL_PIXEL_FORMAT_RGB_565X>;
+			lcm = <0x2c>;
+			porch-param = [0c 0c 00 33 33];
+			cmd2en-param = [5a 69 02 00];
+			pwctrl1-param = [a4 a1];
+			pvgam-param = [d0 04 0d 11 13 2b 3f 54 4c 18 0d 0b 1f 23];
+			nvgam-param = [d0 04 0c 11 13 2c 3f 44 51 2f 1f 1f 20 23];
+			ram-param = [00 F0];
+			rgb-param = [40 02 14];
+			mipi-mode = "MIPI_DBI_MODE_SPI_4WIRE";
+			status = "okay";
+			// compatible = "sitronix,st7789v";
+			// mipi-max-frequency = <20000000>;
+			// reg = <0>;
+			// width = <240>;
+			// height = <240>;
+			// x-offset = <0>;
+			// y-offset = <0>;
+			// vcom = <0x19>;
+			// gctrl = <0x35>;
+			// vrhs = <0x12>;
+			// vdvs = <0x20>;
+			// mdac = <0x00>;
+			// gamma = <0x01>;
+			// colmod = <0x05>;
+			// lcm = <0x2c>;
+			// porch-param = [0c 0c 00 33 33];
+			// cmd2en-param = [5a 69 02 01];
+			// pwctrl1-param = [a4 a1];
+			// pvgam-param = [D0 04 0D 11 13 2B 3F 54 4C 18 0D 0B 1F 23];
+			// nvgam-param = [D0 04 0C 11 13 2C 3F 44 51 2F 1F 1F 20 23];
+			// ram-param = [00 F0];
+			// rgb-param = [CD 08 14];
+			// mipi-mode = "MIPI_DBI_MODE_SPI_4WIRE";
+		};
+	};
+};
+
+&flash0 {
+	partitions {
+		compatible = "fixed-partitions";
+		#address-cells = <1>;
+		#size-cells = <1>;
+
+		boot_partition: partition@0 {
+			label = "mcuboot";
+			reg = <0x00000000 DT_SIZE_K(64)>;
+			read-only;
+		};
+
+		slot0_partition: partition@20000 {
+			label = "image-0";
+			reg = <0x00020000 DT_SIZE_K(128)>;
+		};
+
+		slot1_partition: partition@40000 {
+			label = "image-1";
+			reg = <0x00040000 DT_SIZE_K(128)>;
+		};
+
+		scratch_partition: partition@60000 {
+			label = "image-scratch";
+			reg = <0x00060000 DT_SIZE_K(128)>;
+		};
+	};
+};
+
+// &timers4 {
+// 	status = "okay";
+
+// 	pwm4: pwm {
+// 		status = "okay";
+// 		pinctrl-0 = <&tim4_ch1_pb6 &tim4_ch2_pb7>;
+// 		pinctrl-names = "default";
+// 	};
+// };
+
+&usart1 {
+	pinctrl-0 = <&usart1_tx_pa9 &usart1_rx_pa10>;
+	pinctrl-names = "default";
+	status = "okay";
+	current-speed = <115200>;
+};
+
+// &i2c1 {
+// 	pinctrl-0 = <&i2c1_scl_pb8 &i2c1_sda_pb9>;
+// 	pinctrl-names = "default";
+// 	status = "okay";
+// 	clock-frequency = <I2C_BITRATE_FAST>;
+// };
+
+&spi1 {
+	pinctrl-0 = <&spi1_sck_pa5 &spi1_nss_pa4
+		     &spi1_miso_pa6 &spi1_mosi_pa7>;
+	pinctrl-names = "default";
+	status = "okay";
+	cs-gpios = <&gpiob 0 GPIO_ACTIVE_LOW>; /* D10 */
+
+    dws3000@0 {
+        status = "okay";
+        compatible = "decawave,dw3000";
+        /* Due to the wiring of the Nordic Development Boards and the DWS3000
+	     * Arduino shield it is not possible to use more than 16MHz */
+        spi-max-frequency = <18000000>;
+        reg = <0>;
+        wakeup-gpios  = <&gpiob 8 GPIO_ACTIVE_HIGH>; /* D9 */
+        irq-gpios     = <&gpioa 4 GPIO_ACTIVE_HIGH>; /* D8 */
+        reset-gpios   = <&gpiob 1 GPIO_ACTIVE_LOW>; /* D7 */
+        // spi-pol-gpios = <&arduino_header  7 GPIO_ACTIVE_LOW>; /* D1 */
+        // spi-pha-gpios = <&arduino_header  6 GPIO_ACTIVE_LOW>; /* D0 */
+    };
+};
+
+&spi3 {
+	pinctrl-0 = <&spi3_sck_pb3
+		     &spi3_miso_pb4 &spi3_mosi_pb5>;
+	// pinctrl-0 = <&spi3_sck_pb3 &spi3_nss_pa4
+	// 	     &spi3_miso_pb4 &spi3_mosi_pb5>;
+	// pinctrl-0 = <&spi3_sck_pb3 
+	// 	      &spi3_mosi_pb5>;
+	pinctrl-names = "default";
+	status = "okay";
+	cs-gpios = <&gpioa 15 GPIO_ACTIVE_LOW>; /* D10 */
+
+};
+
+&rtc {
+	clocks = <&rcc STM32_CLOCK(APB1, 28)>,
+		 <&rcc STM32_SRC_LSI RTC_SEL(2)>;
+	status = "okay";
+};
+
+zephyr_udc0: &usbotg_fs {
+	pinctrl-0 = <&usb_otg_fs_dm_pa11 &usb_otg_fs_dp_pa12>;
+	pinctrl-names = "default";
+	status = "okay";
+
+	cdc_acm_uart0: cdc_acm_uart0 {
+		status = "okay";
+		compatible = "zephyr,cdc-acm-uart";
+	};
+};
+
+// &adc1 {
+// 	pinctrl-0 = <&adc1_in1_pa1>;
+// 	pinctrl-names = "default";
+// 	st,adc-clock-source = "SYNC";
+// 	st,adc-prescaler = <2>;
+// 	status = "okay";
+// };
+
+&clk_lsi {
+	status = "okay";
+};
+
+&clk_hse {
+	clock-frequency = <DT_FREQ_M(25)>;
+	status = "okay";
+};
+
+&pll {
+	div-m = <25>;
+	mul-n = <192>;
+	div-p = <2>;
+	div-q = <4>;
+	clocks = <&clk_hse>;
+	status = "okay";
+};
+
+&rcc {
+	clocks = <&pll>;
+	clock-frequency = <DT_FREQ_M(96)>;
+	ahb-prescaler = <1>;
+	apb1-prescaler = <2>;
+	apb2-prescaler = <1>;
+};
+
+// &vref {
+// 	status = "okay";
+// };
+
+// &vbat {
+// 	status = "okay";
+// };

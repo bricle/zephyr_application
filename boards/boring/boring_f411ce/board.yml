@@ -1,0 +1,6 @@
+board:
+  name: boring_f411ce
+  full_name: Boring F411CE
+  vendor: boring
+  socs:
+    - name: stm32f411xe
