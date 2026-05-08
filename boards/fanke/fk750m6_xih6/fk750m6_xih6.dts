@@ -33,6 +33,8 @@
 
 	aliases {
 		led0 = &user_led;
+		// sdhc0 = &sdhc;
+		sdhc0 = &sdmmc1;
 	};
 
 	// ext_memory: memory@90000000 {
@@ -49,20 +51,29 @@
 	// 	zephyr,memory-region = "SDRAM1";
 	// 	zephyr,memory-attr = <( DT_MEM_ARM(ATTR_MPU_RAM) )>;
 	// };
-	ext_memory: memory@90000000 {
+	ext_flash_mem: memory@90000000 {
 		compatible = "zephyr,memory-region";
 		reg = <0x90000000 DT_SIZE_M(256)>;
 		zephyr,memory-region = "EXTMEM";
 		/* The ATTR_MPU_EXTMEM attribut causing a MPU FAULT */
-		zephyr,memory-attr = <( DT_MEM_ARM(ATTR_MPU_IO) )>;
+		zephyr,memory-attr = <DT_MEM_ARM_MPU_FLASH>;
 	};
+	// sram0: memory@24000000 {
+	// 	compatible = "zephyr,memory-region", "mmio-sram";
+	// 	reg = <0x24000000 0x80000>;
+	// 	zephyr,memory-region = "SRAM0";
+	// 	// zephyr,memory-attr = <( DT_MEM_ARM(ATTR_MPU_RAM_NOCACHE) )>;
+	// 	zephyr,memory-attr = <( DT_MEM_ARM(ATTR_MPU_RAM) )>;
+	// };
 };
 
 &clk_hsi48 {
-	// status = "okay";
+	status = "okay";
 	// disable HSI48 clock, otherwise board won't boot
 };
-
+&clk_hsi {
+	status = "okay";
+};
 &clk_hse {
 	clock-frequency = <DT_FREQ_M(25)>;
 	status = "okay";
@@ -99,7 +110,13 @@
 	d3ppre = <2>;
 };
 
+&pwr {
+	power-supply = "ldo";
+};
+
 &flash0 {
+	status = "okay";
+
 	partitions {
 		compatible = "fixed-partitions";
 		#address-cells = <1>;
@@ -118,42 +135,62 @@
 		     &quadspi_bk1_io2_pf7 &quadspi_bk1_io3_pf6
 		     &quadspi_clk_pf10 &quadspi_bk1_ncs_pg6>;
 	pinctrl-names = "default";
+	ssht-enable;
 	status = "okay";
 
 	/* Winbond external flash */
-	w25q256_qspi: qspi-nor-flash@0 {
+	ext_flash_ctrl: qspi-flash-controller@0 {
 		compatible = "st,stm32-qspi-nor";
 		reg = <0>;
 		size = <DT_SIZE_M(256)>; /* 256 Mbits */
-		qspi-max-frequency = <40000000>;
+		qspi-max-frequency = <72000000>;
 		status = "okay";
 		spi-bus-width = <4>;
-		writeoc = "PP_1_1_4";
+		cs-high-time = <4>;
+		reset-cmd;
+		// writeoc = "PP_1_1_4";
 
-		partitions {
-			compatible = "fixed-partitions";
-			#address-cells = <1>;
-			#size-cells = <1>;
-			slot0_partition: partition@0 {
-				label = "image-0";
-				reg = <0x00000000 DT_SIZE_K(2048)>;
-			};
+		#address-cells = <1>;
+		#size-cells = <1>;
+		ranges = <0x0 0x90000000 DT_SIZE_M(256)>; /* Ext Flash mem-mapped to 0x90000000 */
 
-			slot1_partition: partition@80000 {
-				label = "image-1";
-				reg = <0x0080000 DT_SIZE_K(2048)>;
-			};
+		/* Sector erase 64KB uniform granularity for each Flash */
+		/* Subsector erase 4KB, 32KB granularity for each Flash */
+		ext_flash: mt25ql512ab: ext-flash@0 {
+			compatible = "soc-nv-flash";
+			reg = <0x0 DT_SIZE_M(256)>; /* 256MB total in dual-flash mode */
+			write-block-size = <1>; /* 1byte=4bits*2 in dual-flash mode */
+			erase-block-size = <DT_SIZE_K(8)>; /* 4KB*2 in dual-flash mode */
 
-			scratch_partition: partition@100000 {
-				label = "image-scratch";
-				reg = <0x00100000 DT_SIZE_K(2048)>;
+			partitions {
+				compatible = "fixed-partitions";
+				#address-cells = <1>;
+				#size-cells = <1>;
 			};
+		// partitions {
+		// 	compatible = "fixed-partitions";
+		// 	#address-cells = <1>;
+		// 	#size-cells = <1>;
+		// 	slot0_partition: partition@0 {
+		// 		label = "image-0";
+		// 		reg = <0x00000000 DT_SIZE_K(2048)>;
+		// 	};
 
-			storage_partition: partition@110000 {
-				label = "storage";
-				reg = <0x00110000 DT_SIZE_M(8)>;
-			};
-		};
+		// 	slot1_partition: partition@80000 {
+		// 		label = "image-1";
+		// 		reg = <0x0080000 DT_SIZE_K(2048)>;
+		// 	};
+
+		// 	scratch_partition: partition@100000 {
+		// 		label = "image-scratch";
+		// 		reg = <0x00100000 DT_SIZE_K(2048)>;
+		// 	};
+
+		// 	storage_partition: partition@110000 {
+		// 		label = "storage";
+		// 		reg = <0x00110000 DT_SIZE_M(8)>;
+		// 	};
+		// };
 	};
 };
 
@@ -208,3 +245,57 @@
 &rng {
 	status = "okay";
 };
+
+// &sdmmc1 {
+// 	pinctrl-0 = <&sdmmc1_d0_pc8 &sdmmc1_d1_pc9
+// 		     &sdmmc1_d2_pc10 &sdmmc1_d3_pc11
+// 		     &sdmmc1_ck_pc12 &sdmmc1_cmd_pd2>;
+// 	pinctrl-names = "default";
+// 	clk-div = <10>;
+// 	bus-width = <4>;
+// 	// idma;
+// 	// cd-gpios = <&gpiod 4 (GPIO_ACTIVE_HIGH | GPIO_PULL_UP)>;
+// 	disk-name = "SD";
+// 	status = "okay";
+// };
+
+
+
+sdhc: &sdmmc1 {
+	compatible = "st,stm32-sdio";
+	pinctrl-0 = <&sdmmc1_d0_pc8 &sdmmc1_d1_pc9
+			&sdmmc1_d2_pc10 &sdmmc1_d3_pc11
+			&sdmmc1_ck_pc12 &sdmmc1_cmd_pd2>;
+	pinctrl-names = "default";
+	// sdhi-on-gpios = <&gpioj 1 GPIO_ACTIVE_HIGH>;
+	interrupts = <49 0>;
+	interrupt-names = "event";
+	min-bus-freq = <DT_FREQ_K(400)>;
+	max-bus-freq = <DT_FREQ_M(240)>;
+	clk-div = <6>;
+	// cd-gpios = <&gpiod 4 (GPIO_ACTIVE_HIGH | GPIO_PULL_UP)>;
+	// hw-flow-control;
+	bus-width = <4>;
+	status = "okay";
+	// airoc-wifi {
+    //       status = "okay";
+    //       compatible = "infineon,airoc-wifi";
+
+    //       /* Wi-Fi control gpios */
+    //       wifi-reg-on-gpios    = <&gpioc 5 GPIO_ACTIVE_HIGH >;
+    //       wifi-host-wake-gpios = <&gpioa 1 GPIO_ACTIVE_HIGH>;
+    // };
+	sdmmc {
+		compatible = "zephyr,sdmmc-disk";
+		disk-name = "SD";
+		status = "okay";
+	};
+};
+
+// zephyr_udc0: &usbotg_fs {
+// 	pinctrl-0 = <&usb_otg_fs_dm_pa11 &usb_otg_fs_dp_pa12>;
+// 	pinctrl-names = "default";
+// 				clocks = <&rcc STM32_CLOCK(AHB1, 27)>,
+// 				 <&rcc STM32_SRC_PLL3_Q USB_SEL(2)>;
+// 	status = "okay";
+// };
