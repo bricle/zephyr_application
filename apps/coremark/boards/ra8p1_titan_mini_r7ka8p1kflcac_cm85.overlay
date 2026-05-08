@@ -1,0 +1,36 @@
+ 
+ 
+ / {
+	chosen {
+		zephyr,console = &cdc_acm_uart0;
+		/delete-property/ zephyr,entropy;
+	};
+	aliases {
+		button = &button0;
+		led = &led1;
+	};
+ };
+
+/* CoreMark does not use these peripherals. Keeping them enabled in this app
+ * produces devicetree warnings and can initialize unrelated board hardware.
+ */
+/delete-node/ &trng;
+
+&eswm {
+	status = "disabled";
+};
+
+&eth1 {
+	status = "disabled";
+};
+
+&mdio1 {
+	status = "disabled";
+};
+
+
+&zephyr_udc0 {
+	cdc_acm_uart0: cdc_acm_uart0 {
+		compatible = "zephyr,cdc-acm-uart";
+	};
+};

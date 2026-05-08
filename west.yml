@@ -8,6 +8,8 @@ manifest:
   remotes:
     - name: zephyrproject-rtos
       url-base: git@github.com:bricle
+    - name: eembc
+      url-base: https://github.com/eembc
 
   projects:
     - name: zephyr
@@ -36,3 +38,9 @@ manifest:
           - hal_infineon
           - zcbor
           - hal_sifli
+    - name: coremark
+      remote: eembc
+      path: modules/benchmark/coremark
+      revision: d5fad6bd094899101a4e5fd53af7298160ced6ab
+      groups:
+        - benchmark
