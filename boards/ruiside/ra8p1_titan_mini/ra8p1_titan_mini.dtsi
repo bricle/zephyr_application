@@ -15,17 +15,17 @@
 		compatible = "gpio-leds";
 
 		led1: led1 {
-			gpios = <&ioport1 9 GPIO_ACTIVE_HIGH>;
+			gpios = <&ioport1 8 GPIO_ACTIVE_LOW>;
 			label = "LED1";
 		};
 
 		led2: led2 {
-			gpios = <&ioport3 3 GPIO_ACTIVE_HIGH>;
+			gpios = <&ioport1 9 GPIO_ACTIVE_LOW>;
 			label = "LED2";
 		};
 
 		led3: led3 {
-			gpios = <&ioporta 7 GPIO_ACTIVE_HIGH>;
+			gpios = <&ioport1 10 GPIO_ACTIVE_LOW>;
 			label = "LED3";
 		};
 	};
@@ -178,11 +178,11 @@
 &ioport1 {
 	status = "okay";
 
-	mipi_dphy_gpio: mipi-dphy-enable {
-		gpio-hog;
-		gpios = <8 GPIO_ACTIVE_LOW>;
-		output-low;
-	};
+	// mipi_dphy_gpio: mipi-dphy-enable {
+	// 	gpio-hog;
+	// 	gpios = <8 GPIO_ACTIVE_LOW>;
+	// 	output-low;
+	// };
 };
 
 &ioport2 {
@@ -214,6 +214,12 @@
 };
 
 &ioporta {
+	status = "okay";
+};
+&ioportb {
+	status = "okay";
+};
+&ioportc {
 	status = "okay";
 };
 

@@ -18,8 +18,8 @@
 		zephyr,flash = &code_mram_cm85;
 		zephyr,flash-controller = &mram_ctrl;
 		zephyr,code-partition = &slot0_partition;
-		zephyr,console = &uart8;
-		zephyr,shell-uart = &uart8;
+		zephyr,console = &uart2;
+		zephyr,shell-uart = &uart2;
 		zephyr,entropy = &trng;
 	};
 
@@ -27,6 +27,7 @@
 		led0 = &led1;
 		sw0 = &button0;
 		mipi-dsi = &mipi_dsi;
+		sdhc0 = &sdhc0;
 	};
 
 	renesas_mipi_connector: mipi-connector {
@@ -46,14 +47,14 @@
 	status = "okay";
 };
 
-&sci8 {
-	pinctrl-0 = <&sci8_default>;
+&sci2 {
+	pinctrl-0 = <&sci2_default>;
 	pinctrl-names = "default";
 	interrupts = <0 1>, <1 1>, <2 1>, <3 1>;
 	interrupt-names = "rxi", "txi", "tei", "eri";
 	status = "okay";
 
-	uart8: uart {
+	uart2: uart {
 		current-speed = <115200>;
 		status = "okay";
 	};
@@ -188,10 +189,10 @@
 	};
 };
 
-&mipi_dsi {
-	interrupts = <24 12>, <25 12>, <26 12>, <27 12>, <28 12>, <29 12>;
-	interrupt-names = "sq0", "sq1", "vm", "rcv", "ferr", "ppi";
-};
+// &mipi_dsi {
+// 	interrupts = <24 12>, <25 12>, <26 12>, <27 12>, <28 12>, <29 12>;
+// 	interrupt-names = "sq0", "sq1", "vm", "rcv", "ferr", "ppi";
+// };
 
 &lcdif {
 	interrupts = <30 1>;
@@ -210,7 +211,20 @@ zephyr_mipi_dsi: &mipi_dsi {};
 
 renesas_mipi_i2c: &iic1 {};
 
-pmod_sd_shield: &sdhc0 {};
+&sdhc0 {	
+	interrupt-names = "accs", "card", "dma-req";
+	interrupts = <84 12>, <85 12>, <86 12>;
+	pinctrl-0 = <&sdhc0_default>;
+	// max-bus-freq = <DT_FREQ_M(200)>;
+	pinctrl-names = "default";
+	status = "okay";
+
+	sdmmc {
+		compatible = "zephyr,sdmmc-disk";
+		disk-name = "SD";
+		status = "okay";
+	};
+};
 
 arducam_ffc_40pin_i2c: &iic1 {};
 
@@ -226,26 +240,24 @@ arducam_ffc_40pin_dvp_xclk: &cam_clock {};
 
 &eth1 {
 	phy-connection-type = "rgmii";
-	local-mac-address = [74 90 50 01 02 03];
+	local-mac-address = [74 90 50 01 02 04];
 	phy-clock-type = "xtal";
-	phy-handle = <&phy0>;
+	phy-handle = <&phy1>;
 	pinctrl-0 = <&eth1_default>;
 	pinctrl-names = "default";
 	status = "okay";
 };
 
-&mdio1 {
-	pinctrl-0 = <&mdio1_default>;
+&mdio0 {
+	pinctrl-0 = <&mdio0_default>;
 	pinctrl-names = "default";
 	status = "okay";
 
-	phy0: phy@0 {
-		compatible = "maxlinear,gpy111";
-		maxlinear,interface-type = "rgmii";
-		maxlinear,rx-internal-delay = "1.5";
-		reg = <0>;
-		int-gpios = <&ioport1 7 GPIO_ACTIVE_LOW>;
-		reset-gpios = <&ioport7 8 GPIO_ACTIVE_LOW>;
+	phy1: phy@1 {
+		compatible = "realtek,rtl8211f";
+		reg = <1>;
+		// int-gpios = <&ioport1 7 (GPIO_ACTIVE_LOW | GPIO_PULL_UP)>;
+		// reset-gpios = <&ioporta 7 GPIO_ACTIVE_LOW>;
 		status = "okay";
 	};
 };

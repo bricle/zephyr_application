@@ -4,16 +4,16 @@
  */
 
 &pinctrl {
-	sci8_default: sci8_default {
+	sci2_default: sci2_default {
 		group1 {
 			/* tx */
-			psels = <RA_PSEL(RA_PSEL_SCI_8, 13, 2)>;
+			psels = <RA_PSEL(RA_PSEL_SCI_2, 8, 1)>;
 			drive-strength = "medium";
 		};
 
 		group2 {
 			/* rx */
-			psels = <RA_PSEL(RA_PSEL_SCI_8, 13, 3)>;
+			psels = <RA_PSEL(RA_PSEL_SCI_2, 8, 2)>;
 		};
 	};
 
@@ -182,10 +182,18 @@
 		group1 {
 			psels = <RA_PSEL(RA_PSEL_ETH_MII, 4, 15)>, /* MDC */
 				<RA_PSEL(RA_PSEL_ETH_MII, 4, 14)>; /* MDIO */
-			drive-strength = "medium";
+			drive-strength = "highspeed-high";
 		};
 	};
 
+
+	mdio0_default: mdio0_default {
+		group1 {
+			psels = <RA_PSEL(RA_PSEL_ETH_MII, 12, 11)>, /* MDC */
+				<RA_PSEL(RA_PSEL_ETH_MII, 12, 12)>; /* MDIO */
+			drive-strength = "highspeed-high";
+		};
+	};
 	eth1_default: eth1_default {
 		group1 {
 			psels = <RA_PSEL(RA_PSEL_ETH_RGMII, 3, 7)>, /* RGMII_TXD0 */
@@ -201,6 +209,23 @@
 				<RA_PSEL(RA_PSEL_ETH_RGMII, 2, 6)>, /* RGMII_RX_CTL */
 				<RA_PSEL(RA_PSEL_ETH_RGMII, 9, 5)>; /* RGMII_RX_CLK */
 			drive-strength = "high";
+		};
+	};
+
+	sdhc0_default: sdhc0_default {
+		group1 {
+			psels = <RA_PSEL(RA_PSEL_SDHI, 13, 7)>, /* SDCD */
+				<RA_PSEL(RA_PSEL_SDHI, 13, 4)>, /* SDCMD */
+				<RA_PSEL(RA_PSEL_SDHI, 13, 3)>, /* SDDATA0 */
+				<RA_PSEL(RA_PSEL_SDHI, 13, 2)>, /* SDDATA1 */
+				<RA_PSEL(RA_PSEL_SDHI, 13, 1)>, /* SDDATA2 */
+				<RA_PSEL(RA_PSEL_SDHI, 1, 11)>; /* SDDATA3 */
+			drive-strength = "high";
+		};
+
+		group2 {
+			psels = <RA_PSEL(RA_PSEL_SDHI, 13, 5)>; /* SDCLK */
+			drive-strength = "highspeed-high";
 		};
 	};
 };
