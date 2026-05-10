@@ -38,6 +38,7 @@ manifest:
           - hal_infineon
           - zcbor
           - hal_sifli
+          - hostap
     - name: coremark
       remote: eembc
       path: modules/benchmark/coremark
