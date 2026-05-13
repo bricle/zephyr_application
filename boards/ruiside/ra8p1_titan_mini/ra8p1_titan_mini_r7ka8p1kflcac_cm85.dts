@@ -256,8 +256,9 @@ arducam_ffc_40pin_dvp_xclk: &cam_clock {};
 	phy1: phy@1 {
 		compatible = "realtek,rtl8211f";
 		reg = <1>;
-		// int-gpios = <&ioport1 7 (GPIO_ACTIVE_LOW | GPIO_PULL_UP)>;
-		// reset-gpios = <&ioporta 7 GPIO_ACTIVE_LOW>;
+		int-gpios = <&ioport1 7 (GPIO_ACTIVE_LOW | GPIO_PULL_UP)>;
+		// int-gpios = <&ioport1 7 GPIO_ACTIVE_HIGH>;
+		reset-gpios = <&ioporta 7 GPIO_ACTIVE_HIGH>;
 		status = "okay";
 	};
 };
