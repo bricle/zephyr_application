@@ -4,29 +4,44 @@
  */
 
 &pinctrl {
-	sci8_default: sci8_default {
+	sci5_default: sci5_default {
 		group1 {
-			/* TXD8 - P501 */
-			psels = <RA_PSEL(RA_PSEL_SCI_8, 5, 1)>;
+			/* TXD5 - PA09 */
+			psels = <RA_PSEL(RA_PSEL_SCI_5, 10, 9)>;
 			drive-strength = "medium";
 		};
 
 		group2 {
-			/* RXD8 - P500 */
-			psels = <RA_PSEL(RA_PSEL_SCI_8, 5, 0)>;
+			/* RXD5 - PA08 */
+			psels = <RA_PSEL(RA_PSEL_SCI_5, 10, 8)>;
+		};
+	};
+
+	sci6_default: sci6_default {
+		group1 {
+			/* TXD6 - P501 */
+			psels = <RA_PSEL(RA_PSEL_SCI_6, 3, 1)>;
+			drive-strength = "medium";
+		};
+
+		group2 {
+			/* RXD6 - P500 */
+			psels = <RA_PSEL(RA_PSEL_SCI_6, 3, 2)>;
 		};
 	};
 
 	sci9_default: sci9_default {
 		group1 {
 			/* tx */
-			psels = <RA_PSEL(RA_PSEL_SCI_9, 10, 14)>;
+			psels = <RA_PSEL(RA_PSEL_SCI_9, 10, 13)>,
+				<RA_PSEL(RA_PSEL_SCI_9, 10, 14)>;
 			drive-strength = "medium";
 		};
 
 		group2 {
 			/* rx */
-			psels = <RA_PSEL(RA_PSEL_SCI_9, 10, 12)>;
+			psels = <RA_PSEL(RA_PSEL_SCI_9, 10, 12)>,
+				<RA_PSEL(RA_PSEL_SCI_9, 10, 15)>;
 		};
 	};
 
@@ -37,6 +52,15 @@
 				<RA_PSEL(RA_PSEL_SCI_1, 4, 1)>;
 			drive-strength = "medium";
 			drive-open-drain;
+		};
+	};
+
+	spi0_default: spi0_default {
+		group1 {
+			/* MOSI - P115, MISO - P609, RSPCK - P610 */
+			psels = <RA_PSEL(RA_PSEL_SPI, 1, 15)>,
+				<RA_PSEL(RA_PSEL_SPI, 6, 9)>,
+				<RA_PSEL(RA_PSEL_SPI, 6, 10)>;
 		};
 	};
 
@@ -249,17 +273,17 @@
 
 	sdhc1_default: sdhc1_default {
 		group1 {
-			psels = <RA_PSEL(RA_PSEL_SDHI, 13, 7)>, /* SDCD */
-				<RA_PSEL(RA_PSEL_SDHI, 13, 4)>, /* SDCMD */
-				<RA_PSEL(RA_PSEL_SDHI, 13, 3)>, /* SDDATA0 */
-				<RA_PSEL(RA_PSEL_SDHI, 13, 2)>, /* SDDATA1 */
-				<RA_PSEL(RA_PSEL_SDHI, 13, 1)>, /* SDDATA2 */
-				<RA_PSEL(RA_PSEL_SDHI, 1, 11)>; /* SDDATA3 */
+			// psels = <RA_PSEL(RA_PSEL_SDHI, 13, 7)>, /* SDCD */
+			psels = <RA_PSEL(RA_PSEL_SDHI, 4, 1)>, /* SDCMD */
+				<RA_PSEL(RA_PSEL_SDHI, 4, 2)>, /* SDDATA0 */
+				<RA_PSEL(RA_PSEL_SDHI, 4, 3)>, /* SDDATA1 */
+				<RA_PSEL(RA_PSEL_SDHI, 8, 10)>, /* SDDATA2 */
+				<RA_PSEL(RA_PSEL_SDHI, 8, 11)>; /* SDDATA3 */
 			drive-strength = "high";
 		};
 
 		group2 {
-			psels = <RA_PSEL(RA_PSEL_SDHI, 13, 5)>; /* SDCLK */
+			psels = <RA_PSEL(RA_PSEL_SDHI, 4, 0)>; /* SDCLK */
 			drive-strength = "highspeed-high";
 		};
 	};

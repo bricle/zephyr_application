@@ -14,8 +14,9 @@
 	compatible = "ruiside,ra8p1-titan", "renesas,ra8p1", "renesas,ra8";
 
 	chosen {
-		zephyr,console = &uart9;
-		zephyr,shell-uart = &uart9;
+		zephyr,console = &uart5;
+		zephyr,shell-uart = &uart5;
+		zephyr,bt-hci = &bt_hci_uart;
 		zephyr,sram = &sram0;
 		zephyr,flash = &code_mram_cm85;
 		zephyr,flash-controller = &mram_ctrl;
@@ -47,6 +48,32 @@
 	status = "okay";
 };
 
+&sci5 {
+	pinctrl-0 = <&sci5_default>;
+	pinctrl-names = "default";
+	interrupts = <40 1>, <41 1>, <42 1>, <43 1>;
+	interrupt-names = "rxi", "txi", "tei", "eri";
+	status = "okay";
+
+	uart5: uart {
+		current-speed = <115200>;
+		status = "okay";
+	};
+};
+
+// &sci6 {
+// 	pinctrl-0 = <&sci6_default>;
+// 	pinctrl-names = "default";
+// 	interrupts = <0 1>, <1 1>, <2 1>, <3 1>;
+// 	interrupt-names = "rxi", "txi", "tei", "eri";
+// 	status = "okay";
+
+// 	uart6: uart {
+// 		current-speed = <115200>;
+// 		status = "okay";
+// 	};
+// };
+
 &sci9 {
 	pinctrl-0 = <&sci9_default>;
 	pinctrl-names = "default";
@@ -56,7 +83,23 @@
 
 	uart9: uart {
 		current-speed = <115200>;
+		hw-flow-control;
 		status = "okay";
+
+		bt_hci_uart: bt_hci_uart {
+		compatible = "zephyr,bt-hci-uart";
+		status = "okay";
+
+		murata-1dx {
+			status = "okay";
+			compatible = "infineon,bt-hci-uart";
+			bt-reg-on-gpios = <&ioport6 0 GPIO_ACTIVE_HIGH>;
+			bt-host-wake-gpios = <&ioport6 1 GPIO_ACTIVE_HIGH>;
+			bt-dev-wake-gpios = <&ioport4 4 GPIO_ACTIVE_HIGH>;
+			fw-download-speed = <115200>;
+			hci-operation-speed = <115200>;
+		};
+	};
 	};
 };
 
@@ -70,6 +113,34 @@
 		sda-output-delay = <300>;
 		noise-filter-clock-select = <1>;
 		bit-rate-modulation;
+	};
+};
+
+&spi0 {
+	pinctrl-0 = <&spi0_default>;
+	pinctrl-names = "default";
+	interrupts = <20 1>, <21 1>, <22 1>, <23 1>;
+	interrupt-names = "rxi", "txi", "tei", "eri";
+	cs-gpios = <&ioport6 12 GPIO_ACTIVE_LOW>,
+		   <&ioport3 0 GPIO_ACTIVE_LOW>;
+	status = "okay";
+
+	bmi088_accel: bmi088-accel@0 {
+		compatible = "bosch,bmi08x-accel";
+		reg = <0>;
+		spi-max-frequency = <10000000>;
+		accel-hz = "100";
+		accel-fs = <6>;
+		status = "okay";
+	};
+
+	bmi088_gyro: bmi088-gyro@1 {
+		compatible = "bosch,bmi08x-gyro";
+		reg = <1>;
+		spi-max-frequency = <10000000>;
+		gyro-hz = "100_32";
+		gyro-fs = <2000>;
+		status = "okay";
 	};
 };
 
@@ -100,10 +171,15 @@
 	status = "okay";
 };
 
-&port_irq13 {
+&port_irq1 {
 	interrupts = <18 12>;
 	status = "okay";
 };
+
+// &port_irq13 {
+// 	interrupts = <18 12>;
+// 	status = "okay";
+// };
 
 &ulpt0 {
 	interrupts = <19 1>;
@@ -225,6 +301,23 @@ renesas_mipi_i2c: &iic1 {};
 	};
 };
 
+&sdhc1 {	
+	interrupt-names = "accs", "card", "dma-req";
+	interrupts = <81 12>, <82 12>, <83 12>;
+	pinctrl-0 = <&sdhc1_default>;
+	pinctrl-names = "default";
+	status = "okay";
+
+	airoc-wifi {
+		status = "okay";
+		compatible = "infineon,airoc-wifi";
+
+		/* Wi-Fi control gpios */
+		wifi-reg-on-gpios    = <&ioport4 4 GPIO_ACTIVE_HIGH >;
+		wifi-host-wake-gpios = <&ioport5 14 GPIO_ACTIVE_HIGH>;
+    };
+};
+
 arducam_ffc_40pin_i2c: &iic1 {};
 
 arducam_ffc_40pin_dvp_interface: &ceu {};
@@ -255,30 +348,32 @@ arducam_ffc_40pin_dvp_interface: &ceu {};
 	phy2: phy@2 {
 		compatible = "realtek,rtl8211f";
 		reg = <2>;
+		int-gpios = <&ioportc 13 GPIO_ACTIVE_LOW>;
 		reset-gpios = <&ioport8 13 GPIO_ACTIVE_HIGH>;
+		realtek,rgmii-delay = "rxid";
 		status = "okay";
 	};
 };
 
-&eth1 {
-	phy-connection-type = "rgmii";
-	local-mac-address = [74 90 50 01 02 04];
-	phy-clock-type = "xtal";
-	phy-handle = <&phy1>;
-	pinctrl-0 = <&eth1_default>;
-	pinctrl-names = "default";
-	status = "okay";
-};
+// &eth1 {
+// 	phy-connection-type = "rgmii";
+// 	local-mac-address = [74 90 50 01 02 04];
+// 	phy-clock-type = "xtal";
+// 	phy-handle = <&phy1>;
+// 	pinctrl-0 = <&eth1_default>;
+// 	pinctrl-names = "default";
+// 	status = "okay";
+// };
 
-&mdio1 {
-	pinctrl-0 = <&mdio1_default>;
-	pinctrl-names = "default";
-	status = "okay";
+// &mdio1 {
+// 	pinctrl-0 = <&mdio1_default>;
+// 	pinctrl-names = "default";
+// 	status = "okay";
 
-	phy1: phy@1 {
-		compatible = "realtek,rtl8211f";
-		reg = <1>;
-		reset-gpios = <&ioporta 10 GPIO_ACTIVE_HIGH>;
-		status = "okay";
-	};
-};
+// 	phy1: phy@1 {
+// 		compatible = "realtek,rtl8211f";
+// 		reg = <1>;
+// 		reset-gpios = <&ioporta 10 GPIO_ACTIVE_HIGH>;
+// 		status = "okay";
+// 	};
+// };

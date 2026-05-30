@@ -106,5 +106,3 @@
 		status = "okay";
 	};
 };
-
-pmod_sd_shield: &sdhc0 {};

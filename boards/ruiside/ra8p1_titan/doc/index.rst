@@ -3,12 +3,14 @@
 Overview
 ********
 
-The EK-RA8P1 is an Evaluation Kit for Renesas RA8P1 MCU Group which integrates multiple series of software-compatible
-Arm®-based 32-bit cores that share a common set of Renesas peripherals to facilitate design scalability and efficient
-platform-based product development.
+The RA8P1 Titan Board is a development board launched by RT-Thread, based on the
+Renesas R7KA8P1 chip featuring a dual-core architecture with Cortex-M85 and
+Cortex-M33. It provides engineers with a flexible and comprehensive development
+platform, helping developers gain deeper insights and experiences in the field
+of embedded IoT.
 
-The MCU in this series incorporates a high-performance Arm® Cortex®-M85 core running up to 1 GHz and Arm®
-Cortex®-M33 core running up to 250 MHz with the following features:
+The RA8P1 MCU incorporates a high-performance Arm® Cortex®-M85 core running up to
+1 GHz and Arm® Cortex®-M33 core running up to 250 MHz with the following features:
 
 - Up to 1 MB MRAM
 - 2 MB SRAM (256 KB of CM85 TCM RAM, 128 KB CM33 TCM RAM, 1664 KB of user SRAM)
@@ -21,92 +23,94 @@ Cortex®-M33 core running up to 250 MHz with the following features:
 - Analog peripherals
 - Security and safety features
 
-**MCU Native Pin Access**
+Key Features
+============
 
-- 1 GHz Arm Cortex-M85 and 250 MHz Arm Cortex-M33 based RA8P1 MCU in 289 pins, BGA package
-- Native pin access through 2 x 20-pin, and 2 x 40-pin headers (no populated)
-- Camera Expansion connector (present on the underside of the EK-RA8P1 board)
-- 2-Lane MIPI Display connector (present on the underside of the EK-RA8P1 board)
-- Parallel graphics display interface connector
-- MCU current measurement points for precision current consumption measurement
-- Multiple clock sources - RA8P1 MCU oscillator and sub-clock oscillator crystals,
-  providing precision 24.000 MHz and 32,768 Hz reference clocks.
-  Additional low precision clocks are available internal to the RA8P1 MCU
+- Renesas RA8P1 MCU with 1 GHz Arm Cortex-M85, 250 MHz Arm Cortex-M33,
+  Arm Ethos-U55 NPU, and 1 MB MRAM
+- 64 MB NorFlash and 32 MB HyperRAM memory extension
+- 2x Gbps Ethernet
+- Parallel camera interface and MIPI-CSI camera interface for vision AI
+- MIPI-DSI / RGB display interface and 2D drawing engine
+- Octal SPI, Wi-Fi, CAN FD, USBFS/HS, and SDHI
+- On-board IMU and magnetometer
 
-**System Control and Ecosystem Access**
-
-- USB Full Speed Host and Device (USB-C connector)
-- Four 5V input sources
-
-  - USB (Debug, Full Speed, High Speed)
-  - External power supply (using surface mount clamp test points and power input vias)
-
-- Three Debug modes
-
-  - Debug on-board (SWD and JTAG)
-  - Debug in (ETM, SWD, SWO and JTAG)
-  - Debug out (SWD, SWO, and JTAG)
-
-- User LEDs and buttons
-
-  - Three User LEDs (red, blue, green)
-  - Power LED (white) indicating availability of regulated power
-  - Debug LED (yellow) indicating the debug connection
-  - Ethernet LEDs (amber, yellow, green)
-  - Two User buttons
-  - One Reset button
-
-- Five most popular ecosystems expansions
-
-  - Two Seeed Grove system (I2C/I3C/Analog) connectors (not populated)
-  - One SparkFun Qwiic connector (not populated)
-  - Two Digilent Pmod (SPI, UART and I2C) connectors
-  - Arduino (Uno R3) connector
-  - MikroElektronika mikroBUS connector (not populated)
-
-- MCU boot configuration jumper
-
-**Special Feature Access**
-
-- Ethernet (RJ45 RGMII interface)
-- USB High Speed Host and Device (USB-C connector)
-- 512 Mb (64 MB) External Octo-SPI Flash (present in the MCU Native Pin Access area of the EK-RA8P1 board)
+More information about the board can be found at the `RA8P1 Titan Board GitHub`_
+repository and the `RT-Thread RA8P1 Titan Board introduction`_.
 
 Hardware
 ********
 
-Detailed hardware features can be found at:
+Detailed hardware information can be found at:
 
 - RA8P1 MCU: `RA8P1 Group User's Manual Hardware`_
-- EK-RA8P1 board: `EK-RA8P1 - User's Manual`_
+- RA8P1 Titan Board: `RA8P1 Titan Board GitHub`_
+
+Board Hardware
+==============
+
+The RA8P1 Titan Board is designed around the Renesas R7KA8P1 MCU and exposes
+the RA8P1 device features through memory, networking, display, camera, storage,
+wireless, sensor, and expansion interfaces.
+
+MCU and Memory
+--------------
+
+- Renesas R7KA8P1 MCU
+- Arm Cortex-M85 core running up to 1 GHz
+- Arm Cortex-M33 core running up to 250 MHz
+- Arm Ethos-U55 NPU for AI acceleration
+- 1 MB on-chip MRAM
+- 2 MB on-chip SRAM, including CM85 TCM, CM33 TCM, and user SRAM
+- 64 MB external NorFlash
+- 32 MB external HyperRAM
+
+Connectivity and Storage
+------------------------
+
+- Two gigabit Ethernet interfaces
+- Wi-Fi module
+- CAN FD interface
+- USB Full-Speed and USB High-Speed interfaces
+- SDHI interface
+- Octal SPI interface
+
+Display and Camera
+------------------
+
+- MIPI-DSI display interface
+- RGB display interface
+- Graphics LCD Controller (GLCDC)
+- 2D Drawing Engine (DRW)
+- Parallel camera interface
+- MIPI-CSI camera interface
+
+Sensors and Expansion
+---------------------
+
+- On-board IMU
+- On-board magnetometer
+- Board interfaces for camera, display, networking, storage, and wireless
+  expansion
 
 Supported Features
 ==================
 
 .. zephyr:board-supported-hw::
 
-.. note::
-
-   - For using the Camera Expansion Port (J35) in DVP interface, please set switch SW4 as following configuration:
-
-     +-------------+-------------+----------------+---------------+-----------+------------+-------------+-------------+
-     | SW4-1 PMOD1 | SW4-2 PMOD1 | SW4-3 Octo-SPI | SW4-4 Arduino | SW4-5 I3C | SW4-6 MIPI | SW4-7 USBFS | SW4-8 USBHS |
-     +-------------+-------------+----------------+---------------+-----------+------------+-------------+-------------+
-     |     OFF     |     OFF     |      OFF       |     OFF       |     OFF   |     ON     |     OFF     |    OFF      |
-     +-------------+-------------+----------------+---------------+-----------+------------+-------------+-------------+
-
 Dual Core Operation
 *******************
 
-The EK-RA8P1 supports dual core operation with both the Cortex-M85 (CPU0) and Cortex-M33 (CPU1) cores.
-By default, the CM85 core is the boot core and is responsible for initializing the system and
-starting the CM33 core.
+The RA8P1 Titan Board supports dual core operation with both the Cortex-M85
+(CPU0) and Cortex-M33 (CPU1) cores. By default, the CM85 core is the boot core
+and is responsible for initializing the system and starting the CM33 core.
 
 Memory Usage
 ============
 
 By default, MRAM (Flash) and SRAM are split evenly between the two cores.
-Users can manually change the address and size for MRAM (Flash) and SRAM as follows node:
+Users can manually change the address and size for MRAM (Flash) and SRAM with
+the following nodes:
 
    - CPU0: &code_mram_cm85, &sram0
    - CPU1: &code_mram_cm33, &sram1
@@ -119,36 +123,38 @@ Users can manually change the address and size for MRAM (Flash) and SRAM as foll
 Dual Core Flashing
 ==================
 
-When flashing or debugging dual-core samples, ensure that CONFIG_SOC_RA_ENABLE_START_SECOND_CORE is selected
-for the CM85 image. The CM85 core is responsible for starting the CM33 core in soc_late_init_hook.
+When flashing or debugging dual-core samples,
+``CONFIG_SOC_RA_ENABLE_START_SECOND_CORE`` must be selected for the CM85 image.
+The CM85 core is responsible for starting the CM33 core in
+``soc_late_init_hook``.
 
 Programming and Debugging
 *************************
 
 .. zephyr:board-supported-runners::
 
-Applications for the ``ra8p1_titan`` board configuration can be
-built, flashed, and debugged in the usual way. See
-:ref:`build_an_application` and :ref:`application_run` for more details on
-building and running.
+Applications for the ``ra8p1_titan`` board configuration can be built, flashed,
+and debugged in the usual way. See :ref:`build_an_application` and
+:ref:`application_run` for more details on building and running.
 
-Here is an example for the :zephyr:code-sample:`hello_world` application on CM85 core.
+Here is an example for the :zephyr:code-sample:`hello_world` application on the
+CM85 core.
 
 .. zephyr-app-commands::
    :zephyr-app: samples/hello_world
    :board: ra8p1_titan/r7ka8p1kflcac/cm85
    :goals: flash
 
-Open a serial terminal, reset the board (press the S3 button), and you should
-see the following message in the terminal:
+Open a serial terminal, reset the board, and you should see the following
+message in the terminal:
 
 .. code-block:: console
 
    ***** Booting Zephyr OS v4.2.0-xxx-xxxxxxxxxxxxx *****
    Hello World! ra8p1_titan/r7ka8p1kflcac/cm85
 
-For the CM33 core, you can use the ``--sysbuild`` flow to build a minimal first-core launcher image that
-starts the CM33 core.
+For the CM33 core, use the ``--sysbuild`` flow to build a minimal first-core
+launcher image that starts the CM33 core.
 
 .. zephyr-app-commands::
    :tool: west
@@ -160,28 +166,25 @@ starts the CM33 core.
 Flashing
 ========
 
-Program can be flashed to EK-RA8P1 via the on-board SEGGER J-Link debugger.
-SEGGER J-link's drivers are available at https://www.segger.com/downloads/jlink/
+Programs can be flashed to the RA8P1 Titan Board using the configured Zephyr
+runner.
 
-To flash the program to board
+To flash a program to the board:
 
-1. Connect to J-Link OB via USB port to host PC
+1. Connect the board debug port to the host PC.
 
-2. Make sure J-Link OB jumper is in default configuration as described in `EK-RA8P1 - User's Manual`_
+2. Execute the west command:
 
-3. Execute west command
+   .. code-block:: console
 
-	.. code-block:: console
+      west flash
 
-		west flash -r jlink
-
-MCUboot bootloader
+MCUboot Bootloader
 ==================
 
-The sysbuild makes possible to build and flash all necessary images needed to
-bootstrap the board.
+Sysbuild can build and flash all images needed to bootstrap the board.
 
-To build the sample application using sysbuild use the command:
+To build the sample application using sysbuild:
 
 .. zephyr-app-commands::
    :tool: west
@@ -191,40 +194,40 @@ To build the sample application using sysbuild use the command:
    :west-args: --sysbuild
    :gen-args: -DSB_CONFIG_BOOTLOADER_MCUBOOT=y
 
-By default, Sysbuild creates MCUboot and user application images.
+By default, sysbuild creates MCUboot and user application images.
 
-Build directory structure created by sysbuild is different from traditional
-Zephyr build. Output is structured by the domain subdirectories:
+The build directory structure created by sysbuild is different from a
+traditional Zephyr build. Output is structured by domain subdirectories:
 
 .. code-block::
 
-  build/
-  ├── hello_world
-  |    └── zephyr
-  │       ├── zephyr.elf
-  │       ├── zephyr.hex
-  │       ├── zephyr.bin
-  │       ├── zephyr.signed.bin
-  │       └── zephyr.signed.hex
-  ├── mcuboot
-  │    └── zephyr
-  │       ├── zephyr.elf
-  │       ├── zephyr.hex
-  │       └── zephyr.bin
-  └── domains.yaml
+   build/
+   |-- hello_world
+   |   `-- zephyr
+   |       |-- zephyr.elf
+   |       |-- zephyr.hex
+   |       |-- zephyr.bin
+   |       |-- zephyr.signed.bin
+   |       `-- zephyr.signed.hex
+   |-- mcuboot
+   |   `-- zephyr
+   |       |-- zephyr.elf
+   |       |-- zephyr.hex
+   |       `-- zephyr.bin
+   `-- domains.yaml
 
 .. note::
 
-   With ``--sysbuild`` option, MCUboot will be rebuilt and re-flashed
-   every time the pristine build is used.
+   With the ``--sysbuild`` option, MCUboot is rebuilt and reflashed every time a
+   pristine build is used.
 
-To only flash the user application in the subsequent builds, Use:
+To flash only the user application in subsequent builds, use:
 
 .. code-block:: console
 
-   $ west flash --domain hello_world
+   west flash --domain hello_world
 
-For more information about the system build please read the :ref:`sysbuild` documentation.
+For more information about system build, see the :ref:`sysbuild` documentation.
 
 You should see the following message in the terminal:
 
@@ -250,17 +253,21 @@ You should see the following message in the terminal:
 
 References
 **********
-- `EK-RA8P1 Website`_
+
+- `RA8P1 Titan Board GitHub`_
+- `RT-Thread RA8P1 Titan Board introduction`_
 - `RA8P1 MCU group Website`_
 
-.. _EK-RA8P1 Website:
-   https://www.renesas.com/en/design-resources/boards-kits/ek-ra8p1
+.. target-notes::
+
+.. _RA8P1 Titan Board GitHub:
+   https://github.com/RT-Thread-Studio/sdk-bsp-ra8p1-titan-board
+
+.. _RT-Thread RA8P1 Titan Board introduction:
+   https://www.renesas.com/en/document/prb/rt-thread-ra8p1-titan-board
 
 .. _RA8P1 MCU group Website:
    https://www.renesas.com/en/products/microcontrollers-microprocessors/ra-cortex-m-mcus/ra8p1-1ghz-arm-cortex-m85-and-ethos-u55-npu-based-ai-microcontroller
 
-.. _EK-RA8P1 - User's Manual:
-   https://www.renesas.com/en/document/mat/ek-ra8p1-v1-users-manual
-
 .. _RA8P1 Group User's Manual Hardware:
-   https://www.renesas.com/en/document/mah/ra8p1-group-users-manual-hardware
+   https://www.renesas.com/us/en/document/mah/ra8p1-group-users-manual-hardware

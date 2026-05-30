@@ -14,12 +14,12 @@
 	compatible = "ruiside,ra8p1-titan-mini", "renesas,ra8p1", "renesas,ra8";
 
 	chosen {
+		zephyr,console = &uart2;
+		zephyr,shell-uart = &uart2;
 		zephyr,sram = &sram0;
 		zephyr,flash = &code_mram_cm85;
 		zephyr,flash-controller = &mram_ctrl;
 		zephyr,code-partition = &slot0_partition;
-		zephyr,console = &uart2;
-		zephyr,shell-uart = &uart2;
 		zephyr,entropy = &trng;
 	};
 
@@ -28,18 +28,6 @@
 		sw0 = &button0;
 		mipi-dsi = &mipi_dsi;
 		sdhc0 = &sdhc0;
-	};
-
-	renesas_mipi_connector: mipi-connector {
-		compatible = "renesas,ra-gpio-mipi-header";
-		#gpio-cells = <2>;
-		gpio-map-mask = <0xffffffff 0xffffffc0>;
-		gpio-map-pass-thru = <0 0x3f>;
-		gpio-map = <14 0 &ioport5 11 0>, /* IIC_SDA */
-			   <15 0 &ioport5 14 0>, /* DISP_BLEN */
-			   <16 0 &ioport5 12 0>, /* IIC_SCL */
-			   <17 0 &ioport1 11 0>, /* DISP_INT */
-			   <18 0 &ioport6 6 0>;  /* DISP_RST */
 	};
 };
 
@@ -102,6 +90,12 @@
 
 &port_irq13 {
 	interrupts = <18 12>;
+	status = "okay";
+};
+
+// for phy interrupt
+&port_irq31 {
+	interrupts = <23 12>;
 	status = "okay";
 };
 
@@ -189,11 +183,6 @@
 	};
 };
 
-// &mipi_dsi {
-// 	interrupts = <24 12>, <25 12>, <26 12>, <27 12>, <28 12>, <29 12>;
-// 	interrupt-names = "sq0", "sq1", "vm", "rcv", "ferr", "ppi";
-// };
-
 &lcdif {
 	interrupts = <30 1>;
 	interrupt-names = "line";
@@ -207,15 +196,10 @@
 
 zephyr_lcdif: &lcdif {};
 
-zephyr_mipi_dsi: &mipi_dsi {};
-
-renesas_mipi_i2c: &iic1 {};
-
 &sdhc0 {	
 	interrupt-names = "accs", "card", "dma-req";
 	interrupts = <84 12>, <85 12>, <86 12>;
 	pinctrl-0 = <&sdhc0_default>;
-	// max-bus-freq = <DT_FREQ_M(200)>;
 	pinctrl-names = "default";
 	status = "okay";
 
@@ -225,12 +209,6 @@ renesas_mipi_i2c: &iic1 {};
 		status = "okay";
 	};
 };
-
-arducam_ffc_40pin_i2c: &iic1 {};
-
-arducam_ffc_40pin_dvp_interface: &ceu {};
-
-arducam_ffc_40pin_dvp_xclk: &cam_clock {};
 
 &eswm {
 	interrupts = <24 1>;
@@ -246,6 +224,10 @@ arducam_ffc_40pin_dvp_xclk: &cam_clock {};
 	pinctrl-0 = <&eth1_default>;
 	pinctrl-names = "default";
 	status = "okay";
+	// txq-len = <16>;
+	// rxq-len = <16>;
+	// txb-num = <32>;
+	// rxb-num = <32>;
 };
 
 &mdio0 {
@@ -256,9 +238,9 @@ arducam_ffc_40pin_dvp_xclk: &cam_clock {};
 	phy1: phy@1 {
 		compatible = "realtek,rtl8211f";
 		reg = <1>;
-		int-gpios = <&ioport1 7 (GPIO_ACTIVE_LOW | GPIO_PULL_UP)>;
-		// int-gpios = <&ioport1 7 GPIO_ACTIVE_HIGH>;
+		int-gpios = <&ioport1 7 GPIO_ACTIVE_LOW>;
 		reset-gpios = <&ioporta 7 GPIO_ACTIVE_HIGH>;
+		realtek,rgmii-delay = "rxid";
 		status = "okay";
 	};
 };

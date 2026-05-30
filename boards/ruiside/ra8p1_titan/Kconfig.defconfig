@@ -17,4 +17,28 @@ configdefault NET_L2_ETHERNET
 config CLOCK_CONTROL_FIXED_RATE_CLOCK
 	default y if ETH_PHY_DRIVER
 
+# if WIFI_AIROC
+
+# choice AIROC_PART
+# 	default CYW43438
+# endchoice
+
+# choice CYW43438_MODULE
+# 	default CYW43438_AW_CU427_P
+# endchoice
+# # config WHD_DISABLE_SDIO_PULLUP_DURING_SPI_SLEEP
+# # 	default y
+
+# endif # WIFI_AIROC
+
+# if BT
+
+# choice AIROC_PART
+# 	default CYW43438
+# endchoice
+
+# choice CYW43438_MODULE
+# 	default CYW43438_AW_CU427_P
+# endchoice
+# endif # BT
 endif # BOARD_RA8P1_TITAN
