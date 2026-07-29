@@ -7,7 +7,7 @@ manifest:
 
   remotes:
     - name: zephyrproject-rtos
-      url-base: git@github.com:bricle
+      url-base: https://github.com/bricle
     - name: eembc
       url-base: https://github.com/eembc
 
@@ -19,6 +19,7 @@ manifest:
         # By using name-allowlist we can clone only the modules that are
         # strictly needed by the application.
         name-allowlist:
+          - hal_adi
           - cmsis      # required by the ARM port
           - cmsis_6
           - hal_nordic # required by the custom_plank board (Nordic based)
