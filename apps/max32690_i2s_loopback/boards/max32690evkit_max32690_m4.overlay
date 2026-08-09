@@ -1,0 +1,44 @@
+/*
+ * SPDX-License-Identifier: Apache-2.0
+ */
+
+#include <zephyr/dt-bindings/dma/max32690_dma.h>
+
+/ {
+	aliases {
+		audio-i2s = &app_i2s0;
+	};
+
+	soc {
+		app_i2s0: i2s@40060000 {
+			compatible = "adi,max32-i2s";
+			reg = <0x40060000 0x1000>;
+			#address-cells = <1>;
+			#size-cells = <0>;
+			dmas = <&dma0 0 MAX32_DMA_SLOT_I2S_TX>,
+			       <&dma0 1 MAX32_DMA_SLOT_I2S_RX>;
+			dma-names = "tx", "rx";
+			pinctrl-0 = <&i2s0c_ws_p2_26 &i2s0c_sdi_p2_27
+				     &i2s0c_sdo_p2_28 &i2s0c_sck_p2_29>;
+			pinctrl-names = "default";
+			status = "okay";
+		};
+	};
+};
+
+/* SPI0 uses the same P2.26 through P2.29 pins as I2S0. */
+&spi0 {
+	status = "disabled";
+};
+
+&i2c2 {
+	status = "okay";
+	pinctrl-0 = <&i2c2c_sda_p1_7 &i2c2c_scl_p1_8>;
+	pinctrl-names = "default";
+
+	max9867: max9867@18 {
+		compatible = "adi,max9867";
+		reg = <0x18>;
+		status = "okay";
+	};
+};
